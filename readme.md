@@ -14,13 +14,13 @@ In its most basic form, the configuration would look like this:
 var gulp = require( 'gulp' );
 
 require( 'gulp-freemius-deploy' )( gulp, {
-	developer_id: 000,
-	plugin_id: 000,
-	public_key: 'pk_*****',
-	secret_key: 'sk_*****',
-	zip_name: 'your-zip-to-deploy.zip',
-	zip_path: 'dist/',
-	add_contributor: true
+  "developer_id": 000,
+  "plugin_id": 000,
+  "zip_name": "premium-version-zip-name.zip",
+  "zip_name_free": "free-version-zip-name.zip",
+  "access_token": "fs-access-token",
+  "add_contributor": false,
+  "auto_release": true
 } );
 ```
 
@@ -30,8 +30,11 @@ If your `gulpfile.js` is in a public repository, you may want to abstract the `d
 {
   "developer_id": 000,
   "plugin_id": 000,
-  "public_key": "pk_*****",
-  "secret_key": "sk_*****"
+  "zip_name": "premium-version-zip-name.zip",
+  "zip_name_free": "free-version-zip-name.zip",
+  "access_token": "fs-access-token",
+  "add_contributor": false,
+  "auto_release": true
 }
 ```
 
@@ -41,18 +44,8 @@ You can then include it in your gulpfile:
 var gulp = require( 'gulp' ),
     fs_config = require( './fs-config.json' );
 
-require( 'gulp-freemius-deploy' )( gulp, {
-	developer_id: fs_config.developer_id,
-	plugin_id: fs_config.plugin_id,
-	public_key: fs_config.public_key,
-	secret_key: fs_config.secret_key,
-	zip_name: 'your-zip-to-deploy.zip',
-	zip_path: 'dist/',
-	add_contributor: true
-} );
+require( 'gulp-freemius-deploy' )( gulp, fs_config );
 ```
-
-You can find your `developer_id`, `secret_key`, and `public_key` in your [Freemius profile](https://dashboard.freemius.com/#/profile/).
 
 Once configured, simply run this from the command line to deploy your zip to freemius:
 
