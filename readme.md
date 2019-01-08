@@ -24,7 +24,7 @@ require( 'gulp-freemius-deploy' )( gulp, {
 } );
 ```
 
-If your `gulpfile.js` is in a public repository, you may want to abstract the `developer_id`, `plugin_id`, `secret_key`, and `public_key`. You can do this by creating a git ignored `fs-config.json` file like so:
+If your `gulpfile.js` is in a public repository, you may want to abstract the `developer_id`, `plugin_id`, `access_token`. You can do this by creating a git ignored `fs-config.json` file like so:
 
 ```json
 {
