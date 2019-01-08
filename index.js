@@ -7,96 +7,195 @@
  * @param args
  */
 module.exports = function( gulp, args ) {
-	/**
-	 * Deps.
-	 */
-	var notifier = require( 'node-notifier' ),
-		needle = require( 'needle' ),
-		fs = require( 'fs' ),
-		cryptojs = require( 'crypto-js' );
+    /**
+     * Deps.
+     */
 
-	/**
-	 * Base 64 URL encode.
-	 *
-	 * @param str
-	 * @return string
-	 */
-	var base64_url_encode = function( str ) {
-		str = new Buffer( str ).toString( 'base64' );
-		// str = strtr(base64_encode($input), '+/', '-_');
-		str = str.replace( /=/g, '' );
+    const FS_API_ENPOINT = 'https://api.freemius.com';
+    const AUTH = 'FSA ' + args.developer_id + ':' + args.access_token;
 
-		return str;
-	};
+    var notifier = require( 'node-notifier' ),
+        zip = require('gulp-zip'),
+        needle = require( 'needle' ),
+        request = require( 'request' ),
+        httpBuildQuery = require('http-build-query'),
+        os = require('os'),
+        fs = require( 'fs' ),
+        path = require('path'),
+        cryptojs = require( 'crypto-js' ),
+        AdmZip = require('adm-zip');
 
-	gulp.task( 'freemius-deploy', function(done) {
-		if( ! Number.isInteger( args.plugin_id ) ) {
-			return;
-		}
+    /**
+     * Base 64 URL encode.
+     *
+     * @param str
+     * @return string
+     */
+    var base64_url_encode = function( str ) {
+        str = new Buffer( str ).toString( 'base64' );
+        // str = strtr(base64_encode($input), '+/', '-_');
+        str = str.replace( /=/g, '' );
 
-		var resource_url = '/v1/developers/' + args.developer_id + '/plugins/' + args.plugin_id + '/tags.json',
-			boundary = '----' + (new Date().getTime()).toString( 16 ),
-			content_md5 = '',
-			date = new Date().toUTCString(),
-			string_to_sign = [
-				'POST',
-				content_md5,
-				'multipart/form-data; boundary=' + boundary,
-				date,
-				resource_url
-			].join( "\n" ),
-			hash = cryptojs.HmacSHA256( string_to_sign, args.secret_key ),
-			auth = 'FS ' + args.developer_id + ':' + args.public_key + ':' + base64_url_encode( hash.toString() ),
-			buffer = fs.readFileSync( args.zip_path + args.zip_name ),
-			data = {
-				add_contributor: args.add_contributor,
-				file: {
-					buffer: buffer,
-					filename: args.zip_name,
-					content_type: 'application/zip'
-				}
-			},
-			options = {
-				multipart: true,
-				boundary: boundary,
-				headers: {
-					"Content-MD5": content_md5,
-					"Date": date,
-					"Authorization": auth
-				}
-			};
+        return str;
+    };
 
-		needle.post( 'https://api.freemius.com' + resource_url, data, options, function( error, response, body ) {
-			var message;
+    gulp.task( 'freemius-deploy', (done) => {
 
-			if ( error ) {
-				message = 'Error deploying to Freemius.';
-				notifier.notify( { message: message } );
-				console.log( '\x1b[31m%s\x1b[0m', message );
-                		done();
-				return;
-			}
+        if (!Number.isInteger(args.plugin_id)) {
+            return;
+        }
 
-			if ( typeof body === 'object' ) {
-				if ( typeof body.error !== 'undefined' ) {
-					message = 'Error: ' + body.error.message;
-					notifier.notify( { message: message } );
-					console.log( '\x1b[31m%s\x1b[0m', message );
-                    			done();
-					return;
-				}
+        var res_url = function (path, params = null) {
 
-				message = 'Successfully deployed v' + body.version + ' to Freemius. Go and release it: https://dashboard.freemius.com/#!/live/plugins/' + args.plugin_id + '/deployment/';
-				notifier.notify( { message: message } );
-				console.log( '\x1b[32m%s\x1b[0m', message );
-                		done();
-				return;
-			}
+            if (params) {
+                params = '?' + params;
+            }
 
-			message = 'Try deploying to Freemius again in a minute.';
-			notifier.notify( { message: message } );
-			console.log( '\x1b[33m%s\x1b[0m', message );
-            		done();
-		} );
-	} );
+            return FS_API_ENPOINT + '/v1/developers/' + args.developer_id + '/plugins/' + args.plugin_id + '/' + path + params;
+        }
+
+        var buffer = fs.readFileSync(args.src_path + '/' + args.zip_name),
+            data = {
+                add_contributor: args.add_contributor,
+                file: {
+                    buffer: buffer,
+                    filename: args.zip_name,
+                    content_type: 'application/zip'
+                }
+            },
+            options = {
+                multipart: true,
+                headers: {
+                    "Authorization": AUTH
+                }
+            };
+
+
+        // Deploy to Freemius
+
+        needle('post', res_url('tags.json'), data, options).then(function (response) {
+
+            var body = response.body;
+            var message;
+            var tag_id;
+
+            if (typeof body !== 'object') {
+                message = 'Something Went Wrong! ';
+                notifier.notify({message: message});
+                console.log('\x1b[31m%s\x1b[0m', message);
+                done();
+                return;
+            }
+
+            if (typeof body.error !== 'undefined') {
+                message = 'Error: ' + body.error.message;
+                notifier.notify({message: message});
+                console.log('\x1b[31m%s\x1b[0m', message);
+                done();
+                return;
+            }
+
+            tag_id = body.id;
+
+            message = 'Successfully deployed v' + body.version + ' to Freemius.';
+            notifier.notify({message: message});
+            console.log('\x1b[32m%s\x1b[0m', message);
+
+
+            // Auto Release Version
+            if(args.auto_release) {
+
+                var data = {
+                        is_released: true
+                    },
+                    options = {
+                        headers: {
+                            "Authorization": AUTH
+                        }
+                    };
+
+                needle('put', res_url('tags/' + tag_id + '.json', 'fields=id,is_released,version'), data, options).then(function (response) {
+
+                    var body = response.body;
+
+                    if (typeof body !== 'object') {
+                        message = 'Something Went Wrong! ';
+                        notifier.notify({message: message});
+                        console.log('\x1b[31m%s\x1b[0m', message);
+                        done();
+                        return;
+                    }
+
+                    if (typeof body.error !== 'undefined' || !body.is_released) {
+                        message = 'Error: ' + body.error.message;
+                        notifier.notify({message: message});
+                        console.log('\x1b[31m%s\x1b[0m', message);
+                        done();
+                        return;
+                    }
+
+                    message = 'Successfully released v' + body.version + ' on Freemius';
+                    notifier.notify({message: message});
+                    console.log('\x1b[32m%s\x1b[0m', message);
+                })
+                .catch(function (error) {
+                    message = 'Error releasing version on Freemius.';
+                    notifier.notify({message: message});
+                    console.log('\x1b[31m%s\x1b[0m', message);
+                    console.log(error);
+                });
+
+            }
+
+
+            // Download Premium Version
+
+            var download_url = res_url('tags/' + tag_id + '.zip', httpBuildQuery({
+                authorization: AUTH,
+                beautify: true,
+                is_premium: true,
+            }));
+
+            request(download_url)
+                .pipe(fs.createWriteStream(args.dist_path + '/' + args.zip_name))
+                .on('error', (error) => {
+                    console.log('\x1b[31m%s\x1b[0m', error);
+                })
+                .on('close', function () {
+                    message = "The premium version was downloaded to " + args.dist_path + '/' + args.zip_name;
+                    notifier.notify({message: message});
+                    console.log('\x1b[32m%s\x1b[0m', message);
+                });
+
+
+            // Download Free Version
+
+            var download_url = res_url('tags/' + tag_id + '.zip', httpBuildQuery({
+                authorization: AUTH,
+                beautify: true,
+                is_premium: false,
+            }));
+
+            request(download_url)
+                .pipe(fs.createWriteStream(args.dist_path + '/' + args.zip_name_free))
+                .on('error', (error) => {
+                    console.log('\x1b[31m%s\x1b[0m', error);
+                })
+                .on('close', function () {
+                    message = "The free version was downloaded to " + args.dist_path + '/' + args.zip_name_free;
+                    notifier.notify({message: message});
+                    console.log('\x1b[32m%s\x1b[0m', message);
+                });
+
+        })
+        .catch(function (error) {
+            message = 'Error deploying to Freemius.';
+            notifier.notify({message: message});
+            console.log('\x1b[31m%s\x1b[0m', message);
+            console.log(error);
+        });
+
+        done();
+    });
+
 };
