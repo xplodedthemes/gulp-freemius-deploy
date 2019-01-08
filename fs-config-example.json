@@ -1,0 +1,9 @@
+{
+  "developer_id": 000,
+  "plugin_id": 000,
+  "zip_name": "premium-version-zip-name.zip",
+  "zip_name_free": "free-version-zip-name.zip",
+  "access_token": "fs-access-token",
+  "add_contributor": false,
+  "auto_release": true
+}
