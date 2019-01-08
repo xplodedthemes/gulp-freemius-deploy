@@ -54,12 +54,12 @@ module.exports = function( gulp, args ) {
             return FS_API_ENPOINT + '/v1/developers/' + args.developer_id + '/plugins/' + args.plugin_id + '/' + path + params;
         }
 
-        var buffer = fs.readFileSync(args.src_path + '/' + args.zip_name),
+        var buffer = fs.readFileSync(args.src_path + '/' + args.src_zip_name),
             data = {
                 add_contributor: args.add_contributor,
                 file: {
                     buffer: buffer,
-                    filename: args.zip_name,
+                    filename: args.src_zip_name,
                     content_type: 'application/zip'
                 }
             },
@@ -157,12 +157,12 @@ module.exports = function( gulp, args ) {
             }));
 
             request(download_url)
-                .pipe(fs.createWriteStream(args.dist_path + '/' + args.zip_name))
+                .pipe(fs.createWriteStream(args.dist_path + '/' + args.dist_zip_name))
                 .on('error', (error) => {
                     console.log('\x1b[31m%s\x1b[0m', error);
                 })
                 .on('close', function () {
-                    message = "The premium version was downloaded to " + args.dist_path + '/' + args.zip_name;
+                    message = "The premium version was downloaded to " + args.dist_path + '/' + args.dist_zip_name;
                     notifier.notify({message: message});
                     console.log('\x1b[32m%s\x1b[0m', message);
                 });
@@ -177,12 +177,12 @@ module.exports = function( gulp, args ) {
             }));
 
             request(download_url)
-                .pipe(fs.createWriteStream(args.dist_path + '/' + args.zip_name_free))
+                .pipe(fs.createWriteStream(args.dist_path + '/' + args.dist_zip_name_free))
                 .on('error', (error) => {
                     console.log('\x1b[31m%s\x1b[0m', error);
                 })
                 .on('close', function () {
-                    message = "The free version was downloaded to " + args.dist_path + '/' + args.zip_name_free;
+                    message = "The free version was downloaded to " + args.dist_path + '/' + args.dist_zip_name_free;
                     notifier.notify({message: message});
                     console.log('\x1b[32m%s\x1b[0m', message);
                 });
