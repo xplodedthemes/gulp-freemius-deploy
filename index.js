@@ -1,29 +1,35 @@
 /**
  * Deploy to Freemius.
  *
- * The `args` param should contain values for developer_id, plugin_id, secret_key, public_key, zip_name, zip_path, add_contributor.
+ * The `args` param should contain values for developer_id, plugin_id, access_token, zip_name, zip_name_free, add_contributor, auto_release.
  *
  * @param gulp
  * @param args
  */
-module.exports = function( gulp, args ) {
+module.exports = function( gulp, dirname, args ) {
+
     /**
      * Deps.
      */
 
-    const FS_API_ENPOINT = 'https://api.freemius.com';
-    const AUTH = 'FSA ' + args.developer_id + ':' + args.access_token;
-
     var notifier = require( 'node-notifier' ),
-        zip = require('gulp-zip'),
-        needle = require( 'needle' ),
-        request = require( 'request' ),
-        httpBuildQuery = require('http-build-query'),
         os = require('os'),
         fs = require( 'fs' ),
         path = require('path'),
-        cryptojs = require( 'crypto-js' ),
-        AdmZip = require('adm-zip');
+        zip = require('gulp-zip'),
+        clean = require('gulp-clean'),
+        needle = require( 'needle' ),
+        request = require( 'request' ),
+        httpBuildQuery = require('http-build-query'),
+        cryptojs = require( 'crypto-js' );
+
+
+    const FS_API_ENPOINT = 'https://api.freemius.com';
+    const AUTH = 'FSA ' + args.developer_id + ':' + args.access_token;
+
+    const SRC_PATH = path.resolve(dirname, 'src');
+    const DIST_PATH = path.resolve(dirname, 'dist');
+
 
     /**
      * Base 64 URL encode.
@@ -39,7 +45,45 @@ module.exports = function( gulp, args ) {
         return str;
     };
 
-    gulp.task( 'freemius-deploy', (done) => {
+
+
+    gulp.task('clean', function (done) {
+        if(fs.existsSync('src') || fs.existsSync('dist')) {
+            return gulp.src(['src', 'dist'], {read: false})
+                .pipe(clean());
+        }
+        done();
+    });
+
+    gulp.task('structure', (done) => {
+
+        const folders = [
+            'src',
+            'dist'
+        ];
+
+        folders.forEach(dir => {
+            if(!fs.existsSync(dir)) {
+                fs.mkdirSync(dir);
+                console.log('Folder created:', dir);
+            }
+        });
+
+        done();
+    });
+
+    gulp.task('prepare', () =>
+        gulp.src([
+            '../**',
+            '!../node_modules/**',
+            '!../gulpfile*',
+            '!**'
+        ])
+            .pipe(zip('deploy.zip'))
+            .pipe(gulp.dest('src'))
+    );
+
+    gulp.task( 'deploy', (done) => {
 
         if (!Number.isInteger(args.plugin_id)) {
             return;
@@ -54,7 +98,7 @@ module.exports = function( gulp, args ) {
             return FS_API_ENPOINT + '/v1/developers/' + args.developer_id + '/plugins/' + args.plugin_id + '/' + path + params;
         }
 
-        var buffer = fs.readFileSync(args.src_path + '/deploy.zip'),
+        var buffer = fs.readFileSync(SRC_PATH + '/deploy.zip'),
             data = {
                 add_contributor: args.add_contributor,
                 file: {
@@ -157,12 +201,12 @@ module.exports = function( gulp, args ) {
             }));
 
             request(download_url)
-                .pipe(fs.createWriteStream(args.dist_path + '/' + args.zip_name))
+                .pipe(fs.createWriteStream(DIST_PATH + '/' + args.zip_name))
                 .on('error', (error) => {
                     console.log('\x1b[31m%s\x1b[0m', error);
                 })
                 .on('close', function () {
-                    message = "The premium version was downloaded to " + args.dist_path + '/' + args.zip_name;
+                    message = "The premium version was downloaded to " + DIST_PATH + '/' + args.zip_name;
                     notifier.notify({message: message});
                     console.log('\x1b[32m%s\x1b[0m', message);
                 });
@@ -177,12 +221,12 @@ module.exports = function( gulp, args ) {
             }));
 
             request(download_url)
-                .pipe(fs.createWriteStream(args.dist_path + '/' + args.zip_name_free))
+                .pipe(fs.createWriteStream(DIST_PATH + '/' + args.zip_name_free))
                 .on('error', (error) => {
                     console.log('\x1b[31m%s\x1b[0m', error);
                 })
                 .on('close', function () {
-                    message = "The free version was downloaded to " + args.dist_path + '/' + args.zip_name_free;
+                    message = "The free version was downloaded to " + DIST_PATH + '/' + args.zip_name_free;
                     notifier.notify({message: message});
                     console.log('\x1b[32m%s\x1b[0m', message);
                 });
@@ -197,5 +241,12 @@ module.exports = function( gulp, args ) {
 
         done();
     });
+
+    gulp.task('freemius-deploy', gulp.series(
+        'clean',
+        'structure',
+        'prepare',
+        'deploy'
+    ));
 
 };
