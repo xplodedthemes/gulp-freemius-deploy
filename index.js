@@ -73,7 +73,7 @@ module.exports = function( gulp, args ) {
 				message = 'Error deploying to Freemius.';
 				notifier.notify( { message: message } );
 				console.log( '\x1b[31m%s\x1b[0m', message );
-                		done();
+				done();
 				return;
 			}
 
@@ -82,21 +82,21 @@ module.exports = function( gulp, args ) {
 					message = 'Error: ' + body.error.message;
 					notifier.notify( { message: message } );
 					console.log( '\x1b[31m%s\x1b[0m', message );
-                    			done();
+					done();
 					return;
 				}
 
 				message = 'Successfully deployed v' + body.version + ' to Freemius. Go and release it: https://dashboard.freemius.com/#!/live/plugins/' + args.plugin_id + '/deployment/';
 				notifier.notify( { message: message } );
 				console.log( '\x1b[32m%s\x1b[0m', message );
-                		done();
+				done();
 				return;
 			}
 
 			message = 'Try deploying to Freemius again in a minute.';
 			notifier.notify( { message: message } );
 			console.log( '\x1b[33m%s\x1b[0m', message );
-            		done();
+			done();
 		} );
 	} );
 };
