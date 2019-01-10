@@ -127,6 +127,7 @@ module.exports = function( gulp, dirname, args ) {
                 message = 'Something Went Wrong! ';
                 notifier.notify({message: message});
                 console.log('\x1b[31m%s\x1b[0m', message);
+                
                 done();
                 return;
             }
@@ -135,6 +136,7 @@ module.exports = function( gulp, dirname, args ) {
                 message = 'Error: ' + body.error.message;
                 notifier.notify({message: message});
                 console.log('\x1b[31m%s\x1b[0m', message);
+
                 done();
                 return;
             }
@@ -187,6 +189,9 @@ module.exports = function( gulp, dirname, args ) {
                     notifier.notify({message: message});
                     console.log('\x1b[31m%s\x1b[0m', message);
                     console.log(error);
+
+                    done();
+                    return;
                 });
 
             }
@@ -204,31 +209,41 @@ module.exports = function( gulp, dirname, args ) {
                 .pipe(fs.createWriteStream(DIST_PATH + '/' + args.zip_name))
                 .on('error', (error) => {
                     console.log('\x1b[31m%s\x1b[0m', error);
+
+                    done();
+                    return;
                 })
                 .on('close', function () {
                     message = "The premium version was downloaded to " + DIST_PATH + '/' + args.zip_name;
                     notifier.notify({message: message});
                     console.log('\x1b[32m%s\x1b[0m', message);
-                });
 
 
-            // Download Free Version
+                    // Download Free Version
 
-            var download_url = res_url('tags/' + tag_id + '.zip', httpBuildQuery({
-                authorization: AUTH,
-                beautify: true,
-                is_premium: false,
-            }));
+                    var download_url = res_url('tags/' + tag_id + '.zip', httpBuildQuery({
+                        authorization: AUTH,
+                        beautify: true,
+                        is_premium: false,
+                    }));
 
-            request(download_url)
-                .pipe(fs.createWriteStream(DIST_PATH + '/' + args.zip_name_free))
-                .on('error', (error) => {
-                    console.log('\x1b[31m%s\x1b[0m', error);
-                })
-                .on('close', function () {
-                    message = "The free version was downloaded to " + DIST_PATH + '/' + args.zip_name_free;
-                    notifier.notify({message: message});
-                    console.log('\x1b[32m%s\x1b[0m', message);
+                    request(download_url)
+                        .pipe(fs.createWriteStream(DIST_PATH + '/' + args.zip_name_free))
+                        .on('error', (error) => {
+                            console.log('\x1b[31m%s\x1b[0m', error);
+
+                            done();
+                            return;
+                        })
+                        .on('close', function () {
+                            message = "The free version was downloaded to " + DIST_PATH + '/' + args.zip_name_free;
+                            notifier.notify({message: message});
+                            console.log('\x1b[32m%s\x1b[0m', message);
+
+                            done();
+                            return;
+                        });
+
                 });
 
         })
@@ -237,9 +252,11 @@ module.exports = function( gulp, dirname, args ) {
             notifier.notify({message: message});
             console.log('\x1b[31m%s\x1b[0m', message);
             console.log(error);
+
+            done();
+            return;
         });
 
-        done();
     });
 
     gulp.task('freemius-deploy', gulp.series(
