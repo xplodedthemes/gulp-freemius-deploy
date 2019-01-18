@@ -147,6 +147,9 @@ module.exports = function( gulp, dirname, args ) {
             notifier.notify({message: message});
             console.log('\x1b[32m%s\x1b[0m', message);
 
+			// Set plugin version at gulp level
+			gulp.plugin_version = body.version;
+			
 
             // Auto Release Version
             if(args.auto_release) {
