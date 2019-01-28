@@ -16,12 +16,15 @@ module.exports = function( gulp, dirname, args ) {
         os = require('os'),
         fs = require( 'fs' ),
         path = require('path'),
+        extract = require('extract-zip'),
+        replace = require('gulp-replace'),
         zip = require('gulp-zip'),
         clean = require('gulp-clean'),
         needle = require( 'needle' ),
         request = require( 'request' ),
         httpBuildQuery = require('http-build-query'),
-        cryptojs = require( 'crypto-js' );
+        cryptojs = require( 'crypto-js' ),
+        exec = require("sync-exec");
 
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
@@ -46,6 +49,23 @@ module.exports = function( gulp, dirname, args ) {
     };
 
 
+    var runExec = function(command) {
+
+        console.log(command);
+
+        let response = exec(command);
+        if(response.stderr) throw response.stderr;
+
+        console.log(response.stdout);
+    };
+
+
+    gulp.task('npm-update', function (done) {
+
+        runExec('npm update');
+
+        done();
+    });
 
     gulp.task('clean', function (done) {
         if(fs.existsSync('src') || fs.existsSync('dist')) {
@@ -83,7 +103,7 @@ module.exports = function( gulp, dirname, args ) {
             .pipe(gulp.dest('src'))
     );
 
-    gulp.task( 'deploy', (done) => {
+    gulp.task( 'freemius-deploy', (done) => {
 
         if (!Number.isInteger(args.plugin_id)) {
             return;
@@ -262,11 +282,94 @@ module.exports = function( gulp, dirname, args ) {
 
     });
 
-    gulp.task('freemius-deploy', gulp.series(
+
+    gulp.task('wordpress-deploy', function (cb) {
+
+        if(args.svn_path === false) {
+            cb();
+            return;
+        }
+
+        let svn_path = os.homedir() + args.svn_path + '/';
+        let svn_trunk_path = svn_path + 'trunk/';
+        let zip_path = DIST_PATH + '/';
+        let extracted_path = zip_path + 'free/';
+
+        console.log('svn_path', svn_path);
+        console.log('svn_trunk_path', svn_trunk_path);
+
+        extract(zip_path + args.zip_name_free, {dir: extracted_path}, function (err) {
+            // extraction is complete. make sure to handle the err
+
+            if(err) throw err;
+
+            runExec('cd '+svn_trunk_path+' && rm -rf *');
+            runExec('cd '+extracted_path+'*/ && cp -R ./* '+svn_trunk_path);
+            runExec('cd '+svn_path+' && svn upgrade');
+            runExec('cd '+svn_path+' && svn status | grep \'^!\' | awk \'{print $2}\' | xargs svn delete');
+            runExec('cd '+svn_path+' && svn add --force .');
+            runExec('cd '+svn_path+' && svn commit -m "Update"');
+
+            cb();
+
+        });
+
+    });
+
+    gulp.task('envato-deploy', function (cb) {
+
+        let zip_path = DIST_PATH + '/';
+        let extracted_path = zip_path + 'envato/';
+
+        extract(zip_path + args.zip_name, {dir: extracted_path}, function (err) {
+            // extraction is complete. make sure to handle the err
+
+            if(err) throw err;
+
+            gulp.src(extracted_path+'*/*.php')
+                .pipe(replace('##XT_MARKET##', 'envato'))
+                .pipe(gulp.dest(extracted_path))
+
+
+            gulp.src(extracted_path+'*/**')
+                .pipe(zip(args.zip_name))
+                .pipe(gulp.dest(extracted_path))
+
+            gulp.src([extracted_path+'*/**'], {read: false})
+                .pipe(clean());
+
+            cb();
+
+        });
+
+    });
+
+    gulp.task('git-deploy', function (cb) {
+
+        if(!gulp.plugin_version) {
+            return cb();
+        }
+
+        runExec('cd .. && git add .');
+        runExec('cd .. && git commit -a -m "Update"');
+        runExec('cd .. && git pull origin');
+        runExec('cd .. && git submodule update --recursive --remote');
+        runExec('cd .. && git tag -fa '+gulp.plugin_version);
+        runExec('cd .. && git push origin '+gulp.plugin_version);
+        runExec('cd .. && git push');
+        cb();
+    });
+
+    
+    gulp.task('deploy', gulp.series(
+        'npm-update',
         'clean',
         'structure',
         'prepare',
-        'deploy'
+        'freemius-deploy',
+        'wordpress-deploy',
+        'envato-deploy',
+        'git-deploy'
     ));
 
 };
