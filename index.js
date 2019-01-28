@@ -335,9 +335,6 @@ module.exports = function( gulp, dirname, args ) {
                 .pipe(zip(args.zip_name))
                 .pipe(gulp.dest(extracted_path))
 
-            gulp.src([extracted_path+'*/'], {read: false})
-                .pipe(clean());
-
             cb();
 
         });
