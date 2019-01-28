@@ -355,8 +355,7 @@ module.exports = function( gulp, dirname, args ) {
         runExec('cd .. && git pull origin');
         runExec('cd .. && git submodule update --recursive --remote');
         runExec('cd .. && git tag -f '+gulp.plugin_version);
-        runExec('cd .. && git push origin '+gulp.plugin_version);
-        runExec('cd .. && git push');
+        runExec('cd .. && git push -f --tags');
         cb();
     });
 
