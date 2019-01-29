@@ -61,7 +61,7 @@ module.exports = function( gulp, dirname, args ) {
 
 
     gulp.task('npm-update', function (done) {
-        
+
         runExec('git add .');
         runExec('git commit -a -m "Update"');
         runExec('git pull origin');
@@ -363,6 +363,7 @@ module.exports = function( gulp, dirname, args ) {
         runExec('cd .. && git submodule update --recursive --remote');
         runExec('cd .. && git tag -f '+gulp.plugin_version);
         runExec('cd .. && git push -f --tags');
+        runExec('cd .. && git push');
         cb();
     });
 
