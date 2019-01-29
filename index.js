@@ -328,12 +328,17 @@ module.exports = function( gulp, dirname, args ) {
 
             gulp.src(extracted_path+'*/*.php')
                 .pipe(replace('##XT_MARKET##', 'envato'))
-                .pipe(gulp.dest(extracted_path))
+                .pipe(gulp.dest(extracted_path));
 
 
             gulp.src(extracted_path+'*/**')
                 .pipe(zip(args.zip_name))
-                .pipe(gulp.dest(extracted_path))
+                .pipe(gulp.dest(extracted_path));
+
+
+            setTimeout(function() {
+                runExec('cd "' + extracted_path + '" && find . -not -name "*.zip" -delete');
+            }, 5000);
 
             cb();
 
