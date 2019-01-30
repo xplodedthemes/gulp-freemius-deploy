@@ -314,6 +314,11 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('wordpress-deploy', function (cb) {
 
+        if(!deployed_version) {
+            cb();
+            return;
+        }
+
         showStep('Deploying free version to WordPress SVN');
 
         let svn_path = os.homedir() + args.svn_path + '/';
@@ -343,6 +348,11 @@ module.exports = function( gulp, dirname, args ) {
     });
 
     gulp.task('envato-prepare', function (cb) {
+
+        if(!deployed_version) {
+            cb();
+            return;
+        }
 
         showStep('Creating premium version for Envato');
 
@@ -377,6 +387,11 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('envato-deploy', function (cb) {
 
+        if(!deployed_version) {
+            cb();
+            return;
+        }
+
         args.envato_ftps.forEach(function(params) {
 
             var conn = ftp.create( {
@@ -402,6 +417,11 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('git-deploy', function (cb) {
 
+        if(!deployed_version) {
+            cb();
+            return;
+        }
+        
         showStep('Push and tag version on GIT');
 
         runExec('cd .. && git add .');
@@ -440,21 +460,18 @@ module.exports = function( gulp, dirname, args ) {
             'freemius-deploy'
         ];
 
-        if(deployed_version) {
+        if (typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
 
-            if (typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
-
-                tasks.push('wordpress-deploy');
-            }
-
-            if (typeof(args.envato_ftps) !== 'undefined' && args.envato_ftps !== false) {
-
-                tasks.push('envato-prepare');
-                tasks.push('envato-deploy');
-            }
-
-            tasks.push('git-deploy');
+            tasks.push('wordpress-deploy');
         }
+
+        if (typeof(args.envato_ftps) !== 'undefined' && args.envato_ftps !== false) {
+
+            tasks.push('envato-prepare');
+            tasks.push('envato-deploy');
+        }
+
+        tasks.push('git-deploy');
 
         gulp.series(tasks)();
 
