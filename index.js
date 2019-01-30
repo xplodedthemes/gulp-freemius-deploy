@@ -467,8 +467,8 @@ module.exports = function( gulp, dirname, args ) {
             if (typeof(args.envato_ftps) !== 'undefined' && args.envato_ftps !== false) {
 
                 gulp.series(
-                    'envato-prepare'
-                    'envato-deploy',
+                    'envato-prepare',
+                    'envato-deploy'
                 )();
             }
 
