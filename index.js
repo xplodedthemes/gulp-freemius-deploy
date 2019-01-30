@@ -24,7 +24,7 @@
     "ftps": [
         {
           "host":     "ftp-host.com",
-          "user":     "username",
+          "username": "username",
           "password": "password",
           "path":     "/"
         }
