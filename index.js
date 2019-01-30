@@ -108,22 +108,6 @@ module.exports = function( gulp, dirname, args ) {
         cb();
     });
 
-    gulp.task('npm-update', function (cb) {
-
-        showStep('Fetch latest deployment script');
-
-        runExec('git add .');
-        runExec('git commit -a -m "Update"');
-        runExec('git pull origin');
-        runExec('git submodule update --recursive --remote');
-        runExec('git push');
-
-        showStep('NPM Update');
-        runExec('npm update');
-
-        cb();
-    });
-
     gulp.task('clean', function (cb) {
 
         showStep('Cleanup');
@@ -450,7 +434,6 @@ module.exports = function( gulp, dirname, args ) {
 
         gulp.series(
             'clear',
-            'npm-update',
             'clean',
             'structure',
             'prepare',
