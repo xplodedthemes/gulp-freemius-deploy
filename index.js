@@ -126,9 +126,9 @@ module.exports = function( gulp, dirname, args ) {
         }catch(error) {
 
             showError(error, true);
-
-            return cb();
         }
+
+        return cb();
 
     });
 
