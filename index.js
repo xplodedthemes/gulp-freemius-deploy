@@ -402,6 +402,9 @@ module.exports = function( gulp, dirname, args ) {
 
         if(typeof(args.envato.ftps) !== 'undefined' && args.envato.ftps.length) {
 
+            let zip_path = DIST_PATH + '/';
+            let extracted_path = zip_path + 'envato/';
+            
             args.envato.ftps.forEach(function (params) {
 
                 var conn = ftp.create({
