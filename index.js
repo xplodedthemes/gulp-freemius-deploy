@@ -59,9 +59,14 @@ module.exports = function( gulp, dirname, args ) {
 
     var stepTitle = function(title) {
 
-        console.log('\x1b[32m%s\x1b[0m', title+'...');
+        console.log('\x1b[32m%s\x1b[0m', '\r\n' + title+'...' + '\r\n');
     };
 
+    gulp.task('clear', function (cb) {
+
+        runExec('clear');
+        cb();
+    });
 
     gulp.task('npm-update', function (cb) {
 
@@ -397,7 +402,7 @@ module.exports = function( gulp, dirname, args ) {
 
             if(typeof(process.env.FS_ACCESS_TOKEN) === 'undefined') {
 
-                throw 'Missing FS_ACCESS_TOKEN env variable. Please export your Freemius Access Token globaly as an env variable by inserting this within your .profile file.' + "\n\r" + 'export FS_ACCESS_TOKEN=<token>';
+                throw 'Missing FS_ACCESS_TOKEN env variable. Please export your Freemius Access Token globaly as an env variable by inserting this within your .profile file.' + "\r\n" + 'export FS_ACCESS_TOKEN=<token>';
             }
 
         }catch(error) {
@@ -409,6 +414,7 @@ module.exports = function( gulp, dirname, args ) {
         }
 
         gulp.series(
+            'clear',
             'npm-update',
             'clean',
             'structure',
