@@ -454,7 +454,7 @@ module.exports = function( gulp, dirname, args ) {
                 // using base = '.' will transfer everything to /public_html correctly
                 // turn off buffering in gulp.src for best performance
 
-                return gulp.src(extracted_path + '*.zip', {base: '.', buffer: false})
+                return gulp.src(extracted_path + '*.zip', {base: './dist/envato', buffer: false})
                     .pipe(conn.newer(params.path)) // only upload newer files
                     .pipe(conn.dest(params.path));
             });
