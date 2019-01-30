@@ -51,28 +51,38 @@ module.exports = function( gulp, dirname, args ) {
 
     var runExec = function(command) {
 
-        console.log(command);
-
         let response = exec(command);
         if(response.stderr) throw response.stderr;
 
         console.log(response.stdout);
     };
 
+    var stepTitle = function(title) {
+
+        console.log('\x1b[32m%s\x1b[0m', title+'...');
+    };
+
 
     gulp.task('npm-update', function (cb) {
+
+        stepTitle('Fetch latest deployment script');
 
         runExec('git add .');
         runExec('git commit -a -m "Update"');
         runExec('git pull origin');
         runExec('git submodule update --recursive --remote');
         runExec('git push');
+
+        stepTitle('NPM Update');
         runExec('npm update');
 
         cb();
     });
 
     gulp.task('clean', function (cb) {
+
+        stepTitle('Cleanup');
+
         if(fs.existsSync('src') || fs.existsSync('dist')) {
             return gulp.src(['src', 'dist'], {read: false})
                 .pipe(clean());
@@ -80,7 +90,9 @@ module.exports = function( gulp, dirname, args ) {
         cb();
     });
 
-    gulp.task('structure', (cb) => {
+    gulp.task('structure', function (cb) {
+
+        stepTitle('Create Folder Structure');
 
         const folders = [
             'src',
@@ -97,7 +109,10 @@ module.exports = function( gulp, dirname, args ) {
         cb();
     });
 
-    gulp.task('prepare', () =>
+    gulp.task('prepare', function () {
+
+        stepTitle('Create Folder Structure');
+
         gulp.src([
             '../**',
             '!../node_modules/**',
@@ -108,7 +123,7 @@ module.exports = function( gulp, dirname, args ) {
             .pipe(gulp.dest('src'))
     );
 
-    gulp.task( 'freemius-deploy', (cb) => {
+    gulp.task( 'freemius-deploy', function (cb) {
 
         if (!Number.isInteger(args.plugin_id)) {
             return;
@@ -141,6 +156,7 @@ module.exports = function( gulp, dirname, args ) {
 
 
         // Deploy to Freemius
+        stepTitle('Deploying to Freemius');
 
         needle('post', res_url('tags.json'), data, options).then(function (response) {
 
@@ -178,6 +194,8 @@ module.exports = function( gulp, dirname, args ) {
 
             // Auto Release Version
             if(args.auto_release) {
+
+                stepTitle('Auto releasing version on Freemius');
 
                 var data = {
                         is_released: true
@@ -226,6 +244,7 @@ module.exports = function( gulp, dirname, args ) {
 
 
             // Download Premium Version
+            stepTitle('Downloading premium version from freemius');
 
             var download_url = res_url('tags/' + tag_id + '.zip', httpBuildQuery({
                 authorization: AUTH,
@@ -248,6 +267,7 @@ module.exports = function( gulp, dirname, args ) {
 
 
                     // Download Free Version
+                    stepTitle('Downloading free version from freemius');
 
                     var download_url = res_url('tags/' + tag_id + '.zip', httpBuildQuery({
                         authorization: AUTH,
@@ -295,6 +315,8 @@ module.exports = function( gulp, dirname, args ) {
             return;
         }
 
+        stepTitle('Deploying free version to WordPress SVN');
+
         let svn_path = os.homedir() + args.svn_path + '/';
         let svn_trunk_path = svn_path + 'trunk/';
         let zip_path = DIST_PATH + '/';
@@ -322,6 +344,8 @@ module.exports = function( gulp, dirname, args ) {
     });
 
     gulp.task('envato-deploy', function (cb) {
+
+        stepTitle('Creating premium version for Envato');
 
         let zip_path = DIST_PATH + '/';
         let extracted_path = zip_path + 'envato/';
@@ -356,6 +380,8 @@ module.exports = function( gulp, dirname, args ) {
         if(!gulp.plugin_version) {
             return cb();
         }
+
+        stepTitle('Push and tag version on GIT');
 
         runExec('cd .. && git add .');
         runExec('cd .. && git commit -a -m "Update"');
