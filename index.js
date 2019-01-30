@@ -59,12 +59,23 @@ module.exports = function( gulp, dirname, args ) {
 
     var showStep = function(title) {
 
-        console.log('\x1b[32m%s\x1b[0m', '\r\n' + title+'...' + '\r\n');
+        console.log('\x1b[34m%s\x1b[0m', '\r\n' + title+'...' + '\r\n');
     };
 
-    var showError = function(error) {
+    var showSuccess = function(msg, notify = false) {
 
-        console.log('\x1b[31m%s\x1b[0m', '\r\n' + error+'...' + '\r\n');
+        if(notify) {
+            notifier.notify({message: msg});
+        }
+        console.log('\x1b[32m%s\x1b[0m', '\r\n' + msg + '\r\n');
+    };
+
+    var showError = function(error, notify = false) {
+
+        if(notify) {
+            notifier.notify({message: error});
+        }
+        console.log('\x1b[31m%s\x1b[0m', '\r\n' + error + '\r\n');
     };
 
     gulp.task('clear', function (cb) {
@@ -187,8 +198,7 @@ module.exports = function( gulp, dirname, args ) {
             tag_id = body.id;
 
             message = 'Successfully deployed v' + body.version + ' to Freemius.';
-            notifier.notify({message: message});
-            console.log('\x1b[32m%s\x1b[0m', message);
+            showSuccess(message, true);
 
 			// Set plugin version at gulp level
 			gulp.plugin_version = body.version;
@@ -225,7 +235,7 @@ module.exports = function( gulp, dirname, args ) {
                         return;
                     }
 
-                    showStep('Successfully released v' + body.version + ' on Freemius');
+                    showSuccess('Successfully released v' + body.version + ' on Freemius', true);
                 })
                 .catch(function (error) {
                     showError('Error releasing version on Freemius.');
@@ -254,8 +264,7 @@ module.exports = function( gulp, dirname, args ) {
                 })
                 .on('close', function () {
                     message = "The premium version was downloaded to " + DIST_PATH + '/' + args.zip_name;
-                    notifier.notify({message: message});
-                    showStep(message);
+                    showSuccess(message, true);
 
 
                     // Download Free Version
@@ -276,8 +285,7 @@ module.exports = function( gulp, dirname, args ) {
                         })
                         .on('close', function () {
                             message = "The free version was downloaded to " + DIST_PATH + '/' + args.zip_name_free;
-                            notifier.notify({message: message});
-                            showStep(message);
+                            showSuccess(message, true);
 
                             cb();
                             return;
@@ -325,6 +333,7 @@ module.exports = function( gulp, dirname, args ) {
             runExec('cd '+svn_path+' && svn add --force .');
             runExec('cd '+svn_path+' && svn commit -m "Update"');
 
+            showSuccess('Done');
             cb();
 
         });
@@ -355,6 +364,9 @@ module.exports = function( gulp, dirname, args ) {
 
             setTimeout(function() {
                 runExec('cd "' + extracted_path + '" && find . -not -name "*.zip" -delete');
+
+                showSuccess('Done');
+
             }, 5000);
 
             cb();
@@ -378,6 +390,8 @@ module.exports = function( gulp, dirname, args ) {
         runExec('cd .. && git tag -f '+gulp.plugin_version);
         runExec('cd .. && git push -f --tags');
         runExec('cd .. && git push');
+
+        showSuccess('Done');
         cb();
     });
 
@@ -393,8 +407,7 @@ module.exports = function( gulp, dirname, args ) {
 
         }catch(error) {
 
-            notifier.notify({message: error});
-            showError(error);
+            showError(error, true);
 
             return cb();
         }
