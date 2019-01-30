@@ -1,18 +1,40 @@
 /**
  * Deploy to Freemius.
  *
- * The `args` param should contain values for developer_id, plugin_id, access_token, zip_name, zip_name_free, add_contributor, auto_release.
- *
  * @param gulp
+ * @param dirname
  * @param args
  */
+
+/* The `args` options
+
+{
+  "developer_id": 000,
+  "plugin_id": 000,
+  "zip_name": "premium-version-zip-name.zip",
+  "zip_name_free": "free-version-zip-name.zip",
+  "add_contributor": false,
+  "auto_release": true,
+  "svn_path": "/path/to/svn",
+  "envato_ftps": [
+	{
+      "host":     "ftp-host.com",
+      "user":     "username",
+      "password": "password",
+      "path":     "/"
+    }
+  ]
+}
+
+*/
+
 module.exports = function( gulp, dirname, args ) {
 
     /**
      * Deps.
      */
 
-    var notifier = require( 'node-notifier' ),
+    const notifier = require( 'node-notifier' ),
         os = require('os'),
         fs = require( 'fs' ),
         path = require('path'),
@@ -24,7 +46,8 @@ module.exports = function( gulp, dirname, args ) {
         request = require( 'request' ),
         httpBuildQuery = require('http-build-query'),
         cryptojs = require( 'crypto-js' ),
-        exec = require("sync-exec");
+        exec = require("sync-exec"),
+        ftp = require( 'vinyl-ftp' );
 
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
@@ -33,6 +56,7 @@ module.exports = function( gulp, dirname, args ) {
     const SRC_PATH = path.resolve(dirname, 'src');
     const DIST_PATH = path.resolve(dirname, 'dist');
 
+    var deployed_version;
 
     /**
      * Base 64 URL encode.
@@ -137,8 +161,8 @@ module.exports = function( gulp, dirname, args ) {
             '!../gulpfile*',
             '!**'
         ])
-        .pipe(zip('deploy.zip'))
-        .pipe(gulp.dest('src'))
+            .pipe(zip('deploy.zip'))
+            .pipe(gulp.dest('src'))
     );
 
     gulp.task( 'freemius-deploy', function (cb) {
@@ -200,8 +224,8 @@ module.exports = function( gulp, dirname, args ) {
             message = 'Successfully deployed v' + body.version + ' to Freemius.';
             showSuccess(message, true);
 
-			// Set plugin version at gulp level
-			gulp.plugin_version = body.version;
+            // Save plugin version
+            deployed_version = body.version;
 
 
             // Auto Release Version
@@ -237,11 +261,11 @@ module.exports = function( gulp, dirname, args ) {
 
                     showSuccess('Successfully released v' + body.version + ' on Freemius', true);
                 })
-                .catch(function (error) {
-                    showError('Error releasing version on Freemius.');
-                    cb();
-                    return;
-                });
+                    .catch(function (error) {
+                        showError('Error releasing version on Freemius.');
+                        cb();
+                        return;
+                    });
 
             }
 
@@ -294,22 +318,17 @@ module.exports = function( gulp, dirname, args ) {
                 });
 
         })
-        .catch(function (error) {
-            showError('Error deploying to Freemius.');
-            showError(error);
-            cb();
-            return;
-        });
+            .catch(function (error) {
+                showError('Error deploying to Freemius.');
+                showError(error);
+                cb();
+                return;
+            });
 
     });
 
 
     gulp.task('wordpress-deploy', function (cb) {
-
-        if(args.svn_path === false) {
-            cb();
-            return;
-        }
 
         showStep('Deploying free version to WordPress SVN');
 
@@ -333,14 +352,13 @@ module.exports = function( gulp, dirname, args ) {
             runExec('cd '+svn_path+' && svn add --force .');
             runExec('cd '+svn_path+' && svn commit -m "Update"');
 
-            showSuccess('Done');
             cb();
 
         });
 
     });
 
-    gulp.task('envato-deploy', function (cb) {
+    gulp.task('envato-prepare', function (cb) {
 
         showStep('Creating premium version for Envato');
 
@@ -350,36 +368,55 @@ module.exports = function( gulp, dirname, args ) {
         extract(zip_path + args.zip_name, {dir: extracted_path}, function (err) {
             // extraction is complete. make sure to handle the err
 
-            if(err) throw err;
+            if (err) throw err;
 
-            gulp.src(extracted_path+'*/*.php')
+            gulp.src(extracted_path + '*/*.php')
                 .pipe(replace('##XT_MARKET##', 'envato'))
                 .pipe(gulp.dest(extracted_path));
 
 
-            gulp.src(extracted_path+'*/**')
+            gulp.src(extracted_path + '*/**')
                 .pipe(zip(args.zip_name))
                 .pipe(gulp.dest(extracted_path));
 
 
-            setTimeout(function() {
-                runExec('cd "' + extracted_path + '" && find . -not -name "*.zip" -delete');
+            setTimeout(function () {
 
-                showSuccess('Done');
+                runExec('cd "' + extracted_path + '" && find . -not -name "*.zip" -delete');
+                cb();
 
             }, 5000);
 
-            cb();
-
         });
+    });
+
+
+    gulp.task('envato-deploy', function (cb) {
+
+        args.envato_ftps.forEach(function(params) {
+
+            var conn = ftp.create( {
+                host:     params.host,
+                user:     params.username,
+                password: params.password,
+                parallel: 10,
+                log:      gutil.log
+            });
+
+            // using base = '.' will transfer everything to /public_html correctly
+            // turn off buffering in gulp.src for best performance
+
+            return gulp.src( extracted_path + '*.zip', { base: '.', buffer: false } )
+                .pipe( conn.newer( params.path ) ) // only upload newer files
+                .pipe( conn.dest( params.path ) );
+        });
+
+        cb();
 
     });
 
-    gulp.task('git-deploy', function (cb) {
 
-        if(!gulp.plugin_version) {
-            return cb();
-        }
+    gulp.task('git-deploy', function (cb) {
 
         showStep('Push and tag version on GIT');
 
@@ -387,15 +424,14 @@ module.exports = function( gulp, dirname, args ) {
         runExec('cd .. && git commit -a -m "Update"');
         runExec('cd .. && git pull origin');
         runExec('cd .. && git submodule update --recursive --remote');
-        runExec('cd .. && git tag -f '+gulp.plugin_version);
+        runExec('cd .. && git tag -f '+deployed_version);
         runExec('cd .. && git push -f --tags');
         runExec('cd .. && git push');
 
-        showSuccess('Done');
         cb();
     });
 
-    
+
     gulp.task('deploy', function(cb) {
 
         try{
@@ -418,11 +454,26 @@ module.exports = function( gulp, dirname, args ) {
             'clean',
             'structure',
             'prepare',
-            'freemius-deploy',
-            'wordpress-deploy',
-            'envato-deploy',
-            'git-deploy'
+            'freemius-deploy'
         )();
+
+        if(deployed_version) {
+
+            if (typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
+
+                gulp.series( 'wordpress-deploy')();
+            }
+
+            if (typeof(args.envato_ftps) !== 'undefined' && args.envato_ftps !== false) {
+
+                gulp.series(
+                    'envato-prepare'
+                    'envato-deploy',
+                )();
+            }
+
+            gulp.series('git-deploy')();
+        }
 
         cb();
     });

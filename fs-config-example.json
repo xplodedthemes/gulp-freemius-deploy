@@ -3,7 +3,15 @@
   "plugin_id": 000,
   "zip_name": "premium-version-zip-name.zip",
   "zip_name_free": "free-version-zip-name.zip",
-  "access_token": "fs-access-token",
   "add_contributor": false,
-  "auto_release": true
+  "auto_release": true,
+  "svn_path": "/path/to/svn",
+  "envato_ftps": [
+	{
+      "host":     "ftp-host.com",
+      "user":     "username",
+      "password": "password",
+      "path":     "/"
+    }
+  ]
 }
