@@ -28,7 +28,7 @@ module.exports = function( gulp, dirname, args ) {
 
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
-    const AUTH = 'FSA ' + args.developer_id + ':' + args.access_token;
+    const AUTH = 'FSA ' + args.developer_id + ':' + process.env.FS_ACCESS_TOKEN;
 
     const SRC_PATH = path.resolve(dirname, 'src');
     const DIST_PATH = path.resolve(dirname, 'dist');
@@ -60,7 +60,7 @@ module.exports = function( gulp, dirname, args ) {
     };
 
 
-    gulp.task('npm-update', function (done) {
+    gulp.task('npm-update', function (cb) {
 
         runExec('git add .');
         runExec('git commit -a -m "Update"');
@@ -69,18 +69,18 @@ module.exports = function( gulp, dirname, args ) {
         runExec('git push');
         runExec('npm update');
 
-        done();
+        cb();
     });
 
-    gulp.task('clean', function (done) {
+    gulp.task('clean', function (cb) {
         if(fs.existsSync('src') || fs.existsSync('dist')) {
             return gulp.src(['src', 'dist'], {read: false})
                 .pipe(clean());
         }
-        done();
+        cb();
     });
 
-    gulp.task('structure', (done) => {
+    gulp.task('structure', (cb) => {
 
         const folders = [
             'src',
@@ -94,7 +94,7 @@ module.exports = function( gulp, dirname, args ) {
             }
         });
 
-        done();
+        cb();
     });
 
     gulp.task('prepare', () =>
@@ -108,7 +108,7 @@ module.exports = function( gulp, dirname, args ) {
             .pipe(gulp.dest('src'))
     );
 
-    gulp.task( 'freemius-deploy', (done) => {
+    gulp.task( 'freemius-deploy', (cb) => {
 
         if (!Number.isInteger(args.plugin_id)) {
             return;
@@ -153,7 +153,7 @@ module.exports = function( gulp, dirname, args ) {
                 notifier.notify({message: message});
                 console.log('\x1b[31m%s\x1b[0m', message);
                 
-                done();
+                cb();
                 return;
             }
 
@@ -162,7 +162,7 @@ module.exports = function( gulp, dirname, args ) {
                 notifier.notify({message: message});
                 console.log('\x1b[31m%s\x1b[0m', message);
 
-                done();
+                cb();
                 return;
             }
 
@@ -196,7 +196,7 @@ module.exports = function( gulp, dirname, args ) {
                         message = 'Something Went Wrong! ';
                         notifier.notify({message: message});
                         console.log('\x1b[31m%s\x1b[0m', message);
-                        done();
+                        cb();
                         return;
                     }
 
@@ -204,7 +204,7 @@ module.exports = function( gulp, dirname, args ) {
                         message = 'Error: ' + body.error.message;
                         notifier.notify({message: message});
                         console.log('\x1b[31m%s\x1b[0m', message);
-                        done();
+                        cb();
                         return;
                     }
 
@@ -218,7 +218,7 @@ module.exports = function( gulp, dirname, args ) {
                     console.log('\x1b[31m%s\x1b[0m', message);
                     console.log(error);
 
-                    done();
+                    cb();
                     return;
                 });
 
@@ -238,7 +238,7 @@ module.exports = function( gulp, dirname, args ) {
                 .on('error', (error) => {
                     console.log('\x1b[31m%s\x1b[0m', error);
 
-                    done();
+                    cb();
                     return;
                 })
                 .on('close', function () {
@@ -260,7 +260,7 @@ module.exports = function( gulp, dirname, args ) {
                         .on('error', (error) => {
                             console.log('\x1b[31m%s\x1b[0m', error);
 
-                            done();
+                            cb();
                             return;
                         })
                         .on('close', function () {
@@ -268,7 +268,7 @@ module.exports = function( gulp, dirname, args ) {
                             notifier.notify({message: message});
                             console.log('\x1b[32m%s\x1b[0m', message);
 
-                            done();
+                            cb();
                             return;
                         });
 
@@ -281,7 +281,7 @@ module.exports = function( gulp, dirname, args ) {
             console.log('\x1b[31m%s\x1b[0m', message);
             console.log(error);
 
-            done();
+            cb();
             return;
         });
 
@@ -368,15 +368,33 @@ module.exports = function( gulp, dirname, args ) {
     });
 
     
-    gulp.task('deploy', gulp.series(
-        'npm-update',
-        'clean',
-        'structure',
-        'prepare',
-        'freemius-deploy',
-        'wordpress-deploy',
-        'envato-deploy',
-        'git-deploy'
-    ));
+    gulp.task('deploy', function(cb) {
+
+        try{
+
+            if(typeof(process.env.FS_ACCESS_TOKEN) === 'undefined') {
+
+                throw 'Missing FS_ACCESS_TOKEN env variable. Please export your Freemius Access Token globaly as an env variable by inserting this within your .profile file.' + "\n\r" + 'export FS_ACCESS_TOKEN=<token>';
+            }
+
+        }catch(error) {
+
+            notifier.notify({message: error});
+            console.log('\x1b[31m%s\x1b[0m', error);
+
+            return cb();
+        }
+
+        return gulp.series(
+            'npm-update',
+            'clean',
+            'structure',
+            'prepare',
+            'freemius-deploy',
+            'wordpress-deploy',
+            'envato-deploy',
+            'git-deploy'
+        )();
+    });
 
 };
