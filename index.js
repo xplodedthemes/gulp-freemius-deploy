@@ -114,6 +114,24 @@ module.exports = function( gulp, dirname, args ) {
         cb();
     });
 
+    gulp.task('validate', function(cb) {
+
+        try{
+
+            if(typeof(process.env.FS_ACCESS_TOKEN) === 'undefined') {
+
+                throw 'Missing FS_ACCESS_TOKEN env variable. Please export your Freemius Access Token globaly as an env variable by inserting this within your .profile file.' + "\r\n" + 'export FS_ACCESS_TOKEN=<token>';
+            }
+
+        }catch(error) {
+
+            showError(error, true);
+
+            return cb();
+        }
+
+    });
+
     gulp.task('clean', function (cb) {
 
         showStep('Cleanup');
@@ -404,7 +422,7 @@ module.exports = function( gulp, dirname, args ) {
 
             let zip_path = DIST_PATH + '/';
             let extracted_path = zip_path + 'envato/';
-            
+
             args.envato.ftps.forEach(function (params) {
 
                 var conn = ftp.create({
@@ -434,7 +452,7 @@ module.exports = function( gulp, dirname, args ) {
             cb();
             return;
         }
-        
+
         showStep('Push and tag version on GIT');
 
         runExec('cd .. && git add .');
@@ -449,46 +467,28 @@ module.exports = function( gulp, dirname, args ) {
     });
 
 
-    gulp.task('deploy', function(cb) {
+    let tasks = [
+        'clear',
+        'validate'
+        'clean',
+        'structure',
+        'prepare',
+        'freemius-deploy'
+    ];
 
-        try{
+    if (typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
 
-            if(typeof(process.env.FS_ACCESS_TOKEN) === 'undefined') {
+        tasks.push('wordpress-deploy');
+    }
 
-                throw 'Missing FS_ACCESS_TOKEN env variable. Please export your Freemius Access Token globaly as an env variable by inserting this within your .profile file.' + "\r\n" + 'export FS_ACCESS_TOKEN=<token>';
-            }
+    if (typeof(args.envato) !== 'undefined' && args.envato !== false) {
 
-        }catch(error) {
+        tasks.push('envato-prepare');
+        tasks.push('envato-deploy');
+    }
 
-            showError(error, true);
+    tasks.push('git-deploy');
 
-            return cb();
-        }
-
-        let tasks = [
-            'clear',
-            'clean',
-            'structure',
-            'prepare',
-            'freemius-deploy'
-        ];
-
-        if (typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
-
-            tasks.push('wordpress-deploy');
-        }
-
-        if (typeof(args.envato) !== 'undefined' && args.envato !== false) {
-
-            tasks.push('envato-prepare');
-            tasks.push('envato-deploy');
-        }
-
-        tasks.push('git-deploy');
-
-        gulp.series(tasks)();
-
-        cb();
-    });
+    gulp.task('deploy', gulp.series(tasks));
 
 };
