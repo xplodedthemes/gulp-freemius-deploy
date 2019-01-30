@@ -385,7 +385,7 @@ module.exports = function( gulp, dirname, args ) {
             return cb();
         }
 
-        return gulp.series(
+        gulp.series(
             'npm-update',
             'clean',
             'structure',
@@ -395,6 +395,8 @@ module.exports = function( gulp, dirname, args ) {
             'envato-deploy',
             'git-deploy'
         )();
+
+        cb();
     });
 
 };
