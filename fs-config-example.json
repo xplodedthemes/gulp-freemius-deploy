@@ -6,12 +6,18 @@
   "add_contributor": false,
   "auto_release": true,
   "svn_path": "/path/to/svn",
-  "envato_ftps": [
-	{
-      "host":     "ftp-host.com",
-      "user":     "username",
-      "password": "password",
-      "path":     "/"
-    }
-  ]
+  "envato": {
+    "modify": {
+      "find": "##MARKET##",
+      "replace": "envato"
+    },
+    "ftps": [
+        {
+          "host":     "ftp-host.com",
+          "user":     "username",
+          "password": "password",
+          "path":     "/"
+        }
+    ]
+  }
 }

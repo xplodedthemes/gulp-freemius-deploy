@@ -16,14 +16,20 @@
   "add_contributor": false,
   "auto_release": true,
   "svn_path": "/path/to/svn",
-  "envato_ftps": [
-	{
-      "host":     "ftp-host.com",
-      "user":     "username",
-      "password": "password",
-      "path":     "/"
-    }
-  ]
+  "envato": {
+    "modify": {
+      "find": "##MARKET##",
+      "replace": "envato"
+    },
+    "ftps": [
+        {
+          "host":     "ftp-host.com",
+          "user":     "username",
+          "password": "password",
+          "path":     "/"
+        }
+    ]
+  }
 }
 
 */
@@ -365,7 +371,7 @@ module.exports = function( gulp, dirname, args ) {
             if (err) throw err;
 
             gulp.src(extracted_path + '*/*.php')
-                .pipe(replace('##XT_MARKET##', 'envato'))
+                .pipe(replace(args.envato.modify.find, args.envato.modify.replace))
                 .pipe(gulp.dest(extracted_path));
 
 
@@ -392,14 +398,13 @@ module.exports = function( gulp, dirname, args ) {
             return;
         }
 
-        args.envato_ftps.forEach(function(params) {
+        args.envato.ftps.forEach(function(params) {
 
             var conn = ftp.create( {
                 host:     params.host,
                 user:     params.username,
                 password: params.password,
-                parallel: 10,
-                log:      gutil.log
+                parallel: 10
             });
 
             // using base = '.' will transfer everything to /public_html correctly
