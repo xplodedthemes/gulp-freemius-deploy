@@ -370,10 +370,12 @@ module.exports = function( gulp, dirname, args ) {
 
             if (err) throw err;
 
-            gulp.src(extracted_path + '*/*.php')
-                .pipe(replace(args.envato.modify.find, args.envato.modify.replace))
-                .pipe(gulp.dest(extracted_path));
+            if(typeof(args.envato.modify) !== 'undefined') {
 
+                gulp.src(extracted_path + '*/*.php')
+                    .pipe(replace(args.envato.modify.find, args.envato.modify.replace))
+                    .pipe(gulp.dest(extracted_path));
+            }
 
             gulp.src(extracted_path + '*/**')
                 .pipe(zip(args.zip_name))
@@ -398,22 +400,25 @@ module.exports = function( gulp, dirname, args ) {
             return;
         }
 
-        args.envato.ftps.forEach(function(params) {
+        if(typeof(args.envato.ftps) !== 'undefined' && args.envato.ftps.length) {
 
-            var conn = ftp.create( {
-                host:     params.host,
-                user:     params.username,
-                password: params.password,
-                parallel: 10
+            args.envato.ftps.forEach(function (params) {
+
+                var conn = ftp.create({
+                    host: params.host,
+                    user: params.username,
+                    password: params.password,
+                    parallel: 10
+                });
+
+                // using base = '.' will transfer everything to /public_html correctly
+                // turn off buffering in gulp.src for best performance
+
+                return gulp.src(extracted_path + '*.zip', {base: '.', buffer: false})
+                    .pipe(conn.newer(params.path)) // only upload newer files
+                    .pipe(conn.dest(params.path));
             });
-
-            // using base = '.' will transfer everything to /public_html correctly
-            // turn off buffering in gulp.src for best performance
-
-            return gulp.src( extracted_path + '*.zip', { base: '.', buffer: false } )
-                .pipe( conn.newer( params.path ) ) // only upload newer files
-                .pipe( conn.dest( params.path ) );
-        });
+        }
 
         cb();
 
@@ -470,7 +475,7 @@ module.exports = function( gulp, dirname, args ) {
             tasks.push('wordpress-deploy');
         }
 
-        if (typeof(args.envato_ftps) !== 'undefined' && args.envato_ftps !== false) {
+        if (typeof(args.envato) !== 'undefined' && args.envato !== false) {
 
             tasks.push('envato-prepare');
             tasks.push('envato-deploy');
