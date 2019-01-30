@@ -57,9 +57,14 @@ module.exports = function( gulp, dirname, args ) {
         console.log(response.stdout);
     };
 
-    var stepTitle = function(title) {
+    var showStep = function(title) {
 
         console.log('\x1b[32m%s\x1b[0m', '\r\n' + title+'...' + '\r\n');
+    };
+
+    var showError = function(error) {
+
+        console.log('\x1b[31m%s\x1b[0m', '\r\n' + error+'...' + '\r\n');
     };
 
     gulp.task('clear', function (cb) {
@@ -70,7 +75,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('npm-update', function (cb) {
 
-        stepTitle('Fetch latest deployment script');
+        showStep('Fetch latest deployment script');
 
         runExec('git add .');
         runExec('git commit -a -m "Update"');
@@ -78,7 +83,7 @@ module.exports = function( gulp, dirname, args ) {
         runExec('git submodule update --recursive --remote');
         runExec('git push');
 
-        stepTitle('NPM Update');
+        showStep('NPM Update');
         runExec('npm update');
 
         cb();
@@ -86,7 +91,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('clean', function (cb) {
 
-        stepTitle('Cleanup');
+        showStep('Cleanup');
 
         if(fs.existsSync('src') || fs.existsSync('dist')) {
             return gulp.src(['src', 'dist'], {read: false})
@@ -97,7 +102,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('structure', (cb) => {
 
-        stepTitle('Create Folder Structure');
+        showStep('Create Folder Structure');
 
         const folders = [
             'src',
@@ -158,7 +163,7 @@ module.exports = function( gulp, dirname, args ) {
 
 
         // Deploy to Freemius
-        stepTitle('Deploying to Freemius');
+        showStep('Deploying to Freemius');
 
         needle('post', res_url('tags.json'), data, options).then(function (response) {
 
@@ -167,19 +172,14 @@ module.exports = function( gulp, dirname, args ) {
             var tag_id;
 
             if (typeof body !== 'object') {
-                message = 'Something Went Wrong! ';
-                notifier.notify({message: message});
-                console.log('\x1b[31m%s\x1b[0m', message);
-                
+                showError('Something Went Wrong!');
                 cb();
                 return;
             }
 
             if (typeof body.error !== 'undefined') {
                 message = 'Error: ' + body.error.message;
-                notifier.notify({message: message});
-                console.log('\x1b[31m%s\x1b[0m', message);
-
+                showError(message);
                 cb();
                 return;
             }
@@ -192,12 +192,12 @@ module.exports = function( gulp, dirname, args ) {
 
 			// Set plugin version at gulp level
 			gulp.plugin_version = body.version;
-			
+
 
             // Auto Release Version
             if(args.auto_release) {
 
-                stepTitle('Auto releasing version on Freemius');
+                showStep('Auto releasing version on Freemius');
 
                 var data = {
                         is_released: true
@@ -213,31 +213,22 @@ module.exports = function( gulp, dirname, args ) {
                     var body = response.body;
 
                     if (typeof body !== 'object') {
-                        message = 'Something Went Wrong! ';
-                        notifier.notify({message: message});
-                        console.log('\x1b[31m%s\x1b[0m', message);
+                        showError('Something Went Wrong!');
                         cb();
                         return;
                     }
 
                     if (typeof body.error !== 'undefined' || !body.is_released) {
                         message = 'Error: ' + body.error.message;
-                        notifier.notify({message: message});
-                        console.log('\x1b[31m%s\x1b[0m', message);
+                        showError(message);
                         cb();
                         return;
                     }
 
-                    message = 'Successfully released v' + body.version + ' on Freemius';
-                    notifier.notify({message: message});
-                    console.log('\x1b[32m%s\x1b[0m', message);
+                    showStep('Successfully released v' + body.version + ' on Freemius');
                 })
                 .catch(function (error) {
-                    message = 'Error releasing version on Freemius.';
-                    notifier.notify({message: message});
-                    console.log('\x1b[31m%s\x1b[0m', message);
-                    console.log(error);
-
+                    showError('Error releasing version on Freemius.');
                     cb();
                     return;
                 });
@@ -246,7 +237,7 @@ module.exports = function( gulp, dirname, args ) {
 
 
             // Download Premium Version
-            stepTitle('Downloading premium version from freemius');
+            showStep('Downloading premium version from freemius');
 
             var download_url = res_url('tags/' + tag_id + '.zip', httpBuildQuery({
                 authorization: AUTH,
@@ -257,19 +248,18 @@ module.exports = function( gulp, dirname, args ) {
             request(download_url)
                 .pipe(fs.createWriteStream(DIST_PATH + '/' + args.zip_name))
                 .on('error', (error) => {
-                    console.log('\x1b[31m%s\x1b[0m', error);
-
+                    showError(error);
                     cb();
                     return;
                 })
                 .on('close', function () {
                     message = "The premium version was downloaded to " + DIST_PATH + '/' + args.zip_name;
                     notifier.notify({message: message});
-                    console.log('\x1b[32m%s\x1b[0m', message);
+                    showStep(message);
 
 
                     // Download Free Version
-                    stepTitle('Downloading free version from freemius');
+                    showStep('Downloading free version from freemius');
 
                     var download_url = res_url('tags/' + tag_id + '.zip', httpBuildQuery({
                         authorization: AUTH,
@@ -280,15 +270,14 @@ module.exports = function( gulp, dirname, args ) {
                     request(download_url)
                         .pipe(fs.createWriteStream(DIST_PATH + '/' + args.zip_name_free))
                         .on('error', (error) => {
-                            console.log('\x1b[31m%s\x1b[0m', error);
-
+                            showError(error);
                             cb();
                             return;
                         })
                         .on('close', function () {
                             message = "The free version was downloaded to " + DIST_PATH + '/' + args.zip_name_free;
                             notifier.notify({message: message});
-                            console.log('\x1b[32m%s\x1b[0m', message);
+                            showStep(message);
 
                             cb();
                             return;
@@ -298,11 +287,8 @@ module.exports = function( gulp, dirname, args ) {
 
         })
         .catch(function (error) {
-            message = 'Error deploying to Freemius.';
-            notifier.notify({message: message});
-            console.log('\x1b[31m%s\x1b[0m', message);
-            console.log(error);
-
+            showError('Error deploying to Freemius.');
+            showError(error);
             cb();
             return;
         });
@@ -317,7 +303,7 @@ module.exports = function( gulp, dirname, args ) {
             return;
         }
 
-        stepTitle('Deploying free version to WordPress SVN');
+        showStep('Deploying free version to WordPress SVN');
 
         let svn_path = os.homedir() + args.svn_path + '/';
         let svn_trunk_path = svn_path + 'trunk/';
@@ -347,7 +333,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('envato-deploy', function (cb) {
 
-        stepTitle('Creating premium version for Envato');
+        showStep('Creating premium version for Envato');
 
         let zip_path = DIST_PATH + '/';
         let extracted_path = zip_path + 'envato/';
@@ -383,7 +369,7 @@ module.exports = function( gulp, dirname, args ) {
             return cb();
         }
 
-        stepTitle('Push and tag version on GIT');
+        showStep('Push and tag version on GIT');
 
         runExec('cd .. && git add .');
         runExec('cd .. && git commit -a -m "Update"');
@@ -408,7 +394,7 @@ module.exports = function( gulp, dirname, args ) {
         }catch(error) {
 
             notifier.notify({message: error});
-            console.log('\x1b[31m%s\x1b[0m', error);
+            showError(error);
 
             return cb();
         }
