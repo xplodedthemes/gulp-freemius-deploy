@@ -80,7 +80,7 @@ module.exports = function( gulp, dirname, args ) {
 
 
     var runExec = function(command) {
-        
+
         console.log(command);
 
         let response = exec(command);
@@ -391,17 +391,20 @@ module.exports = function( gulp, dirname, args ) {
 
             if (err) throw err;
 
-            var cleanEnvatoFolder = function() {
+            var cleanEnvatoFolder = function(cb) {
 
                 runExec('cd "' + extracted_path + '" && find . -not -name "*.zip" -delete');
+                cb();
             };
 
-            var zipEnvatoVersion = function() {
+            var zipEnvatoVersion = function(cb) {
 
                 gulp.src(extracted_path + '*/**')
                     .pipe(zip(args.zip_name))
                     .pipe(gulp.dest(extracted_path))
-                    .on('end', cleanEnvatoFolder);
+                    .on('end', function() {
+                        cleanEnvatoFolder(cb)
+                    });
 
             };
 
@@ -410,14 +413,15 @@ module.exports = function( gulp, dirname, args ) {
                 gulp.src(extracted_path + '*/*.php')
                     .pipe(replace(args.envato.modify.find, args.envato.modify.replace))
                     .pipe(gulp.dest(extracted_path))
-                    .on('end', zipEnvatoVersion);
+                    .on('end', function() {
+                        zipEnvatoVersion(cb)
+                    });
 
             }else{
 
-                zipEnvatoVersion();
+                zipEnvatoVersion(cb);
             }
 
-            cb();
         });
     });
 
