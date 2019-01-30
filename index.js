@@ -109,10 +109,7 @@ module.exports = function( gulp, dirname, args ) {
         cb();
     });
 
-    gulp.task('prepare', () => {
-
-        stepTitle('Create Folder Structure');
-
+    gulp.task('prepare', () =>
         gulp.src([
             '../**',
             '!../node_modules/**',
@@ -120,9 +117,8 @@ module.exports = function( gulp, dirname, args ) {
             '!**'
         ])
         .pipe(zip('deploy.zip'))
-        .pipe(gulp.dest('src'));
-
-    });
+        .pipe(gulp.dest('src'))
+    );
 
     gulp.task( 'freemius-deploy', function (cb) {
 
