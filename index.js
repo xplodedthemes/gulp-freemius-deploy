@@ -432,31 +432,31 @@ module.exports = function( gulp, dirname, args ) {
             return cb();
         }
 
-        gulp.series(
+        let tasks = [
             'clear',
             'clean',
             'structure',
             'prepare',
             'freemius-deploy'
-        )();
+        ];
 
         if(deployed_version) {
 
             if (typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
 
-                gulp.series( 'wordpress-deploy')();
+                tasks.push('wordpress-deploy');
             }
 
             if (typeof(args.envato_ftps) !== 'undefined' && args.envato_ftps !== false) {
 
-                gulp.series(
-                    'envato-prepare',
-                    'envato-deploy'
-                )();
+                tasks.push('envato-prepare');
+                tasks.push('envato-deploy');
             }
 
-            gulp.series('git-deploy')();
+            tasks.push('git-deploy');
         }
+
+        gulp.series(tasks)();
 
         cb();
     });
