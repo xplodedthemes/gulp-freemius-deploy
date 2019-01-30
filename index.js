@@ -121,7 +121,7 @@ module.exports = function( gulp, dirname, args ) {
         ])
             .pipe(zip('deploy.zip'))
             .pipe(gulp.dest('src'))
-    );
+    });
 
     gulp.task( 'freemius-deploy', function (cb) {
 
