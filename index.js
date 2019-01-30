@@ -138,9 +138,9 @@ module.exports = function( gulp, dirname, args ) {
 
         if(fs.existsSync('src') || fs.existsSync('dist')) {
             return gulp.src(['src', 'dist'], {read: false})
-                .pipe(clean());
+                .pipe(clean())
+                .on('end', cb);
         }
-        cb();
     });
 
     gulp.task('structure', (cb) => {
@@ -162,7 +162,7 @@ module.exports = function( gulp, dirname, args ) {
         cb();
     });
 
-    gulp.task('prepare', () =>
+    gulp.task('prepare', function (cb) {
         gulp.src([
             '../**',
             '!../node_modules/**',
@@ -171,7 +171,8 @@ module.exports = function( gulp, dirname, args ) {
         ])
             .pipe(zip('deploy.zip'))
             .pipe(gulp.dest('src'))
-    );
+            .on('end', cb);
+    });
 
     gulp.task( 'freemius-deploy', function (cb) {
 
@@ -269,11 +270,11 @@ module.exports = function( gulp, dirname, args ) {
 
                     showSuccess('Successfully released v' + body.version + ' on Freemius', true);
                 })
-                    .catch(function (error) {
-                        showError('Error releasing version on Freemius.');
-                        cb();
-                        return;
-                    });
+                .catch(function (error) {
+                    showError('Error releasing version on Freemius.');
+                    cb();
+                    return;
+                });
 
             }
 
@@ -326,12 +327,12 @@ module.exports = function( gulp, dirname, args ) {
                 });
 
         })
-            .catch(function (error) {
-                showError('Error deploying to Freemius.');
-                showError(error);
-                cb();
-                return;
-            });
+        .catch(function (error) {
+            showError('Error deploying to Freemius.');
+            showError(error);
+            cb();
+            return;
+        });
 
     });
 
@@ -388,25 +389,33 @@ module.exports = function( gulp, dirname, args ) {
 
             if (err) throw err;
 
+            var cleanEnvatoFolder = function() {
+
+                runExec('cd "' + extracted_path + '" && find . -not -name "*.zip" -delete');
+            };
+
+            var zipEnvatoVersion = function() {
+
+                gulp.src(extracted_path + '*/**')
+                    .pipe(zip(args.zip_name))
+                    .pipe(gulp.dest(extracted_path))
+                    .on('end', cleanEnvatoFolder);
+
+            };
+
             if(typeof(args.envato.modify) !== 'undefined') {
 
                 gulp.src(extracted_path + '*/*.php')
                     .pipe(replace(args.envato.modify.find, args.envato.modify.replace))
-                    .pipe(gulp.dest(extracted_path));
+                    .pipe(gulp.dest(extracted_path))
+                    .on('end', zipEnvatoVersion);
+
+            }else{
+
+                zipEnvatoVersion();
             }
 
-            gulp.src(extracted_path + '*/**')
-                .pipe(zip(args.zip_name))
-                .pipe(gulp.dest(extracted_path));
-
-
-            setTimeout(function () {
-
-                runExec('cd "' + extracted_path + '" && find . -not -name "*.zip" -delete');
-                cb();
-
-            }, 5000);
-
+            cb();
         });
     });
 
@@ -469,7 +478,7 @@ module.exports = function( gulp, dirname, args ) {
 
     let tasks = [
         'clear',
-        'validate'
+        'validate',
         'clean',
         'structure',
         'prepare',
