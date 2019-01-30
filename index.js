@@ -80,6 +80,8 @@ module.exports = function( gulp, dirname, args ) {
 
 
     var runExec = function(command) {
+        
+        console.log(command);
 
         let response = exec(command);
         if(response.stderr) throw response.stderr;
