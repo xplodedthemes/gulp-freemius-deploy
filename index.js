@@ -486,7 +486,7 @@ module.exports = function( gulp, dirname, args ) {
 					    privateKey: fs.readFileSync(private_key_path)
 					}).then(() => {
 				
-					    return sftp.fastPut(extracted_path + args.zip_name, params.path);
+					    return sftp.fastPut(extracted_path + args.zip_name, params.path + '/' + args.zip_name);
 					    
 					}).then((data) => {
 					    console.log(data);
@@ -555,6 +555,6 @@ module.exports = function( gulp, dirname, args ) {
 
     tasks.push('git-deploy');
 
-    gulp.task('deploy', gulp.series(tasks));
+    return gulp.task('deploy', gulp.series(tasks));
 
 };
