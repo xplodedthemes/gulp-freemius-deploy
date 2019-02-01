@@ -504,7 +504,7 @@ module.exports = function( gulp, dirname, args ) {
 					});
 			
             	}
-            }
+            });
         }
 
     });
