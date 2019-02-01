@@ -464,7 +464,7 @@ module.exports = function( gulp, dirname, args ) {
 	                // using base = '.' will transfer everything to /public_html correctly
 	                // turn off buffering in gulp.src for best performance
 	
-	                return gulp.src(extracted_path + '*.zip', {base: './dist/envato', buffer: false})
+	                return gulp.src(extracted_path + args.zip_name, {base: './dist/envato', buffer: false})
 	                    .pipe(conn.newer(params.path)) // only upload newer files
 	                    .pipe(conn.dest(params.path))
 	                    .on('end', function() {
@@ -485,7 +485,7 @@ module.exports = function( gulp, dirname, args ) {
 					    username: params.username,
 					    privateKey: fs.readFileSync(private_key_path)
 					}).then(() => {
-					    return sftp.list(extracted_path + '*.zip');
+					    return sftp.list(extracted_path + args.zip_name);
 					    sftp.fastPut(localPath, params.path, [options]);
 					}).then((data) => {
 					    console.log(data);
@@ -496,7 +496,8 @@ module.exports = function( gulp, dirname, args ) {
                         }
 					   
 					}).catch((err) => {
-					    console.log(err, 'catch error');
+					    console.log(err);
+					    showError('Failed deploying to ' + params.host);
 					    i++;
                         if(i === total) {
                         	cb();
