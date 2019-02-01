@@ -55,7 +55,8 @@ module.exports = function( gulp, dirname, args ) {
         httpBuildQuery = require('http-build-query'),
         cryptojs = require( 'crypto-js' ),
         exec = require("sync-exec"),
-        ftp = require( 'vinyl-ftp' );
+        ftp = require( 'vinyl-ftp' ),
+        sftp = require('gulp-sftp');
 
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
@@ -448,24 +449,38 @@ module.exports = function( gulp, dirname, args ) {
 
                 showStep('Deploying to ' + params.host);
 
-                var conn = ftp.create({
-                    host: params.host,
-                    user: params.username,
-                    password: params.password,
-                    port: params.port,
-                    secure: params.secure,
-                    parallel: 10
-                });
-
-                // using base = '.' will transfer everything to /public_html correctly
-                // turn off buffering in gulp.src for best performance
-
-                return gulp.src(extracted_path + '*.zip', {base: './dist/envato', buffer: false})
-                    .pipe(conn.newer(params.path)) // only upload newer files
-                    .pipe(conn.dest(params.path))
-                    .on('end', function() {
-                        showSuccess('Successfully deployed to ' + params.host);
-                    });
+				if(!params.secure) {
+					
+	                var conn = ftp.create({
+	                    host: params.host,
+	                    user: params.username,
+	                    pass: params.password,
+	                    port: params.port
+	                });
+	
+	                // using base = '.' will transfer everything to /public_html correctly
+	                // turn off buffering in gulp.src for best performance
+	
+	                return gulp.src(extracted_path + '*.zip', {base: './dist/envato', buffer: false})
+	                    .pipe(conn.newer(params.path)) // only upload newer files
+	                    .pipe(conn.dest(params.path))
+	                    .on('end', function() {
+	                        showSuccess('Successfully deployed to ' + params.host);
+	                    });
+	                    
+	            }else{
+		            
+	                return gulp.src(extracted_path + '*.zip', {base: './dist/envato', buffer: false})
+				        .pipe(sftp({
+				            host: params.host,
+		                    user: params.username,
+		                    pass: params.password,
+				            port: params.port,
+				        }))
+				        .on('end', function() {
+	                        showSuccess('Successfully deployed to ' + params.host);
+	                    });
+	            }
             });
         }
 

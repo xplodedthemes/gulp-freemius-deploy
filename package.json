@@ -29,6 +29,7 @@
     "node-notifier": "^5.1.2",
     "request": "^2.88.0",
     "sync-exec": "^0.6.2",
-    "vinyl-ftp": "^0.6.1"
+    "vinyl-ftp": "^0.6.1",
+    "gulp-sftp": "^0.1.5"
   }
 }
