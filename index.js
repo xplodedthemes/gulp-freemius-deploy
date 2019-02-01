@@ -445,6 +445,9 @@ module.exports = function( gulp, dirname, args ) {
             let zip_path = DIST_PATH + '/';
             let extracted_path = zip_path + 'envato/';
 
+			let total = args.envato.ftps.length;
+			let i = 0;
+			
             args.envato.ftps.forEach(function (params) {
 
                 showStep('Deploying to ' + params.host);
@@ -466,12 +469,15 @@ module.exports = function( gulp, dirname, args ) {
 	                    .pipe(conn.dest(params.path))
 	                    .on('end', function() {
 	                        showSuccess('Successfully deployed to ' + params.host);
-	                        cb();
+	                        i++;
+	                        if(i === total) {
+	                        	cb();
+	                        }
 	                    });
 	                    
 	            }else{
 		            
-	                return gulp.src(extracted_path + '*.zip', {base: './dist/envato', buffer: false})
+	                return gulp.src(extracted_path + '*.zip')
 				        .pipe(sftp({
 				            host: params.host,
 		                    user: params.username,
@@ -480,7 +486,11 @@ module.exports = function( gulp, dirname, args ) {
 				            remotePath: params.path,
 				            callback: function() {
 					            showSuccess('Successfully deployed to ' + params.host);
-					            cb();
+					            i++;
+					            
+					            if(i === total) {
+		                        	cb();
+		                        }
 				            }
 				        }))
 	            }
