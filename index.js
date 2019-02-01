@@ -486,7 +486,7 @@ module.exports = function( gulp, dirname, args ) {
 					    privateKey: fs.readFileSync(private_key_path)
 					}).then(() => {
 				
-					    return sftp.fastPut(extracted_path + args.zip_name, params.path, [options]);
+					    return sftp.fastPut(extracted_path + args.zip_name, params.path);
 					    
 					}).then((data) => {
 					    console.log(data);
