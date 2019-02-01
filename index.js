@@ -466,6 +466,7 @@ module.exports = function( gulp, dirname, args ) {
 	                    .pipe(conn.dest(params.path))
 	                    .on('end', function() {
 	                        showSuccess('Successfully deployed to ' + params.host);
+	                        cb();
 	                    });
 	                    
 	            }else{
@@ -476,15 +477,15 @@ module.exports = function( gulp, dirname, args ) {
 		                    user: params.username,
 		                    pass: params.password,
 				            port: params.port,
+				            remotePath: params.path,
+				            callback: function() {
+					            showSuccess('Successfully deployed to ' + params.host);
+					            cb();
+				            }
 				        }))
-				        .on('end', function() {
-	                        showSuccess('Successfully deployed to ' + params.host);
-	                    });
 	            }
             });
         }
-
-        cb();
 
     });
 
