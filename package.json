@@ -28,8 +28,9 @@
     "needle": "^2.0.1",
     "node-notifier": "^5.1.2",
     "request": "^2.88.0",
+    "ssh2-sftp-client": "^2.4.3",
     "sync-exec": "^0.6.2",
-    "vinyl-ftp": "^0.6.1",
-    "gulp-ssh": "^0.7.0"
-  }
+    "vinyl-ftp": "^0.6.1"
+  },
+  "devDependencies": {}
 }

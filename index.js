@@ -56,8 +56,8 @@ module.exports = function( gulp, dirname, args ) {
         cryptojs = require( 'crypto-js' ),
         exec = require("sync-exec"),
         ftp = require( 'vinyl-ftp' ),
-        GulpSSH = require('gulp-ssh');
-
+        sftpClient = require('ssh2-sftp-client'),
+		sftp = new sftpClient();
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
     const AUTH = 'FSA ' + args.developer_id + ':' + process.env.FS_ACCESS_TOKEN;
@@ -478,27 +478,33 @@ module.exports = function( gulp, dirname, args ) {
 	            }else{
 		            
 		            var private_key_path = path.join(os.homedir(), '/.ssh/id_rsa');
-		            
-		            var config = {
-						host: params.host,
-						user: params.username,
-						port: params.port,
-						privateKey: fs.readFileSync(private_key_path)
-					}
-					
-	                return gulp.src(extracted_path + '*.zip', {base: './dist/envato', buffer: false})
-					    .pipe(GulpSSH.sftp('write', params.path))
-					    .on('end', function() {
-						    showSuccess('Successfully deployed to ' + params.host);
-				            i++;
-				            
-				            if(i === total) {
-	                        	cb();
-	                        }
-					    })
+		       
+					sftp.connect({
+					    host: params.host,
+					    port: params.port,
+					    username: params.username,
+					    privateKey: fs.readFileSync(private_key_path)
+					}).then(() => {
+					    return sftp.list(extracted_path + '*.zip');
+					    sftp.fastPut(localPath, params.path, [options]);
+					}).then((data) => {
+					    console.log(data);
+					    showSuccess('Successfully deployed to ' + params.host);
+                        i++;
+                        if(i === total) {
+                        	cb();
+                        }
+					   
+					}).catch((err) => {
+					    console.log(err, 'catch error');
+					    i++;
+                        if(i === total) {
+                        	cb();
+                        }
+					});
 			
-	            }
-            });
+            	}
+            }
         }
 
     });
