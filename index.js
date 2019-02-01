@@ -56,7 +56,7 @@ module.exports = function( gulp, dirname, args ) {
         cryptojs = require( 'crypto-js' ),
         exec = require("sync-exec"),
         ftp = require( 'vinyl-ftp' ),
-        sftp = require('gulp-sftp-up4');
+        ssh = require('gulp-ssh');
 
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
@@ -477,22 +477,24 @@ module.exports = function( gulp, dirname, args ) {
 	                    
 	            }else{
 		            
-	                return gulp.src(extracted_path + '*.zip')
-				        .pipe(sftp({
-				            host: params.host,
-		                    user: params.username,
-		                    pass: params.password,
-				            port: params.port,
-				            remotePath: params.path,
-				            callback: function() {
-					            showSuccess('Successfully deployed to ' + params.host);
-					            i++;
-					            
-					            if(i === total) {
-		                        	cb();
-		                        }
-				            }
-				        }))
+		            var config = {
+						host: params.host,
+						user: params.username,
+						port: params.port,
+						privateKey: fs.readFileSync('~/.ssh/id_rsa')
+					}
+					
+	                return gulp.src(extracted_path + '*.zip', {base: './dist/envato', buffer: false})
+					    .pipe(ssh.sftp('write', params.path))
+					    .on('end', function() {
+						    showSuccess('Successfully deployed to ' + params.host);
+				            i++;
+				            
+				            if(i === total) {
+	                        	cb();
+	                        }
+					    })
+			
 	            }
             });
         }
