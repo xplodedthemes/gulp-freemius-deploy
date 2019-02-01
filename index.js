@@ -144,6 +144,8 @@ module.exports = function( gulp, dirname, args ) {
             return gulp.src(['src', 'dist'], {read: false})
                 .pipe(clean())
                 .on('end', cb);
+        }else{
+	        cb();
         }
     });
 
