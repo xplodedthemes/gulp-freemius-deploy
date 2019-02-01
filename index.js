@@ -18,15 +18,17 @@
   "svn_path": "/path/to/svn",
   "envato": {
     "modify": {
-      "find": "##MARKET##",
-      "replace": "envato"
+        "find": "##MARKET##",
+        "replace": "envato"
     },
     "ftps": [
         {
           "host":     "ftp-host.com",
           "username": "username",
           "password": "password",
-          "path":     "/"
+          "port":	  "21",
+          "secure":	  false,
+          "path":     "./"
         }
     ]
   }
@@ -442,12 +444,14 @@ module.exports = function( gulp, dirname, args ) {
 
             args.envato.ftps.forEach(function (params) {
 
-                showStep('Deploying to ' + params.username +'@'+params.host);
+                showStep('Deploying to ' + params.host);
 
                 var conn = ftp.create({
                     host: params.host,
                     user: params.username,
                     password: params.password,
+                    port: params.port,
+                    secure: params.secure,
                     parallel: 10
                 });
 
@@ -456,7 +460,10 @@ module.exports = function( gulp, dirname, args ) {
 
                 return gulp.src(extracted_path + '*.zip', {base: './dist/envato', buffer: false})
                     .pipe(conn.newer(params.path)) // only upload newer files
-                    .pipe(conn.dest(params.path));
+                    .pipe(conn.dest(params.path))
+                    .on('end', function() {
+                        showSuccess('Successfully deployed to ' + params.host);
+                    });
             });
         }
 
