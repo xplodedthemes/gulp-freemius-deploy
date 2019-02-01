@@ -22,7 +22,6 @@
     "gulp": "^4.0.0",
     "gulp-clean": "^0.4.0",
     "gulp-replace": "^1.0.0",
-    "gulp-sftp": "^0.1.5",
     "gulp-zip": "^4.2.0",
     "http-build-query": "^0.7.0",
     "md5": "^2.2.1",
@@ -30,9 +29,7 @@
     "node-notifier": "^5.1.2",
     "request": "^2.88.0",
     "sync-exec": "^0.6.2",
-    "vinyl-ftp": "^0.6.1"
-  },
-  "devDependencies": {
+    "vinyl-ftp": "^0.6.1",
     "gulp-ssh": "^0.7.0"
   }
 }
