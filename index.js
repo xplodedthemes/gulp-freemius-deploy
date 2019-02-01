@@ -56,7 +56,7 @@ module.exports = function( gulp, dirname, args ) {
         cryptojs = require( 'crypto-js' ),
         exec = require("sync-exec"),
         ftp = require( 'vinyl-ftp' ),
-        sftp = require('gulp-sftp');
+        sftp = require('gulp-sftp-up4');
 
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
