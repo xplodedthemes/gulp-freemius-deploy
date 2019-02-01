@@ -489,7 +489,6 @@ module.exports = function( gulp, dirname, args ) {
 					    return sftp.fastPut(extracted_path + args.zip_name, params.path + '/' + args.zip_name);
 					    
 					}).then((data) => {
-					    console.log(data);
 					    showSuccess('Successfully deployed to ' + params.host);
                         i++;
                         if(i === total) {
