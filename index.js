@@ -477,11 +477,13 @@ module.exports = function( gulp, dirname, args ) {
 	                    
 	            }else{
 		            
+		            var private_key_path = path.join(os.homedir(), '/.ssh/id_rsa');
+		            
 		            var config = {
 						host: params.host,
 						user: params.username,
 						port: params.port,
-						privateKey: fs.readFileSync('~/.ssh/id_rsa')
+						privateKey: fs.readFileSync(private_key_path)
 					}
 					
 	                return gulp.src(extracted_path + '*.zip', {base: './dist/envato', buffer: false})
