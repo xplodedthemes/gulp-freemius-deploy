@@ -56,7 +56,7 @@ module.exports = function( gulp, dirname, args ) {
         cryptojs = require( 'crypto-js' ),
         exec = require("sync-exec"),
         ftp = require( 'vinyl-ftp' ),
-        ssh = require('gulp-ssh');
+        GulpSSH = require('gulp-ssh');
 
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
@@ -487,7 +487,7 @@ module.exports = function( gulp, dirname, args ) {
 					}
 					
 	                return gulp.src(extracted_path + '*.zip', {base: './dist/envato', buffer: false})
-					    .pipe(ssh.sftp('write', params.path))
+					    .pipe(GulpSSH.sftp('write', params.path))
 					    .on('end', function() {
 						    showSuccess('Successfully deployed to ' + params.host);
 				            i++;
