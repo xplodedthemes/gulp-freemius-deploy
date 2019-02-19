@@ -346,7 +346,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('wordpress-deploy', function (cb) {
 
-        if(!deployed_version) {
+        if(!deployed_version || !args.auto_release){
             cb();
             return;
         }
@@ -381,7 +381,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('envato-prepare', function (cb) {
 
-        if(!deployed_version) {
+        if(!deployed_version || !args.auto_release) {
             cb();
             return;
         }
@@ -433,7 +433,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('envato-deploy', function (cb) {
 
-        if(!deployed_version) {
+        if(!deployed_version || !args.auto_release) {
             cb();
             return;
         }
@@ -513,7 +513,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('git-deploy', function (cb) {
 
-        if(!deployed_version) {
+        if(!deployed_version || !args.auto_release) {
             cb();
             return;
         }
