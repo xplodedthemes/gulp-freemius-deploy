@@ -65,6 +65,7 @@ module.exports = function( gulp, dirname, args ) {
     const SRC_PATH = path.resolve(dirname, 'src');
     const DIST_PATH = path.resolve(dirname, 'dist');
 
+    var previous_version;
     var deployed_version;
 
     /**
@@ -179,6 +180,25 @@ module.exports = function( gulp, dirname, args ) {
             .pipe(zip('deploy.zip'))
             .pipe(gulp.dest('src'))
             .on('end', cb);
+    });
+
+    gulp.task('freemius-check-version', function(cb) {
+
+        needle('get', res_url('tags.json?count=1')).then(function (response) {
+
+            var tags = response.body.tags;
+            var tag;
+            if(tags.length > 0) {
+                previous_version = tags.shift().version;
+            }
+            cb();
+        })
+        .catch(function (error) {
+            showError('Error checking Freemius latest version.');
+            showError(error);
+            cb();
+            return;
+        });
     });
 
     gulp.task( 'freemius-deploy', function (cb) {
@@ -524,8 +544,12 @@ module.exports = function( gulp, dirname, args ) {
         runExec('cd .. && git commit -a -m "Update"');
         runExec('cd .. && git pull origin');
         runExec('cd .. && git submodule update --recursive --remote');
-        runExec('cd .. && git tag -f '+deployed_version);
-        runExec('cd .. && git push -f --tags');
+
+        if(previous_version !== deployed_version) {
+            runExec('cd .. && git tag -f ' + deployed_version);
+            runExec('cd .. && git push -f --tags');
+        }
+
         runExec('cd .. && git push');
 
         cb();
