@@ -562,6 +562,7 @@ module.exports = function( gulp, dirname, args ) {
         'clean',
         'structure',
         'prepare',
+        'freemius-check-version',
         'freemius-deploy'
     ];
 
