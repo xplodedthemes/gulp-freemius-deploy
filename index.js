@@ -114,6 +114,16 @@ module.exports = function( gulp, dirname, args ) {
         console.log('\x1b[31m%s\x1b[0m', '\r\n' + error + '\r\n');
     };
 
+    var res_url = function (path, params = null) {
+
+        if (params) {
+            params = '?' + params;
+        }
+
+        return FS_API_ENPOINT + '/v1/developers/' + args.developer_id + '/plugins/' + args.plugin_id + '/' + path + params;
+    }
+
+
     gulp.task('clear', function (cb) {
 
         runExec('clear');
@@ -184,7 +194,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('freemius-check-version', function(cb) {
 
-        needle('get', res_url('tags.json?count=1')).then(function (response) {
+        needle('get', res_url('tags.json', 'count=1')).then(function (response) {
 
             var tags = response.body.tags;
             var tag;
@@ -205,15 +215,6 @@ module.exports = function( gulp, dirname, args ) {
 
         if (!Number.isInteger(args.plugin_id)) {
             return;
-        }
-
-        var res_url = function (path, params = null) {
-
-            if (params) {
-                params = '?' + params;
-            }
-
-            return FS_API_ENPOINT + '/v1/developers/' + args.developer_id + '/plugins/' + args.plugin_id + '/' + path + params;
         }
 
         var buffer = fs.readFileSync(SRC_PATH + '/deploy.zip'),
