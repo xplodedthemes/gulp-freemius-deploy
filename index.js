@@ -194,13 +194,20 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('freemius-check-version', function(cb) {
 
-        needle('get', res_url('tags.json', 'count=1')).then(function (response) {
+        var options = {
+            headers: {
+                "Authorization": AUTH
+            }
+        };
+
+        needle('get', res_url('tags.json', 'count=1'), options).then(function (response) {
 
             var tags = response.body.tags;
-            var tag;
+
             if(tags.length > 0) {
                 previous_version = tags.shift().version;
             }
+
             cb();
         })
         .catch(function (error) {
