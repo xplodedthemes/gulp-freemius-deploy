@@ -445,6 +445,7 @@ module.exports = function( gulp, dirname, args ) {
 
                 gulp.src(extracted_path + '*/*.php')
                     .pipe(replace(args.envato.modify.find, args.envato.modify.replace))
+                    .pipe(replace(/\/\* ENVATO_EXCLUDE_BEGIN \*\/([\s\S]+?)\/\* ENVATO_EXCLUDE_END \*\//g, ''))
                     .pipe(gulp.dest(extracted_path))
                     .on('end', function() {
                         zipEnvatoVersion(cb)
