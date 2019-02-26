@@ -610,7 +610,9 @@ module.exports = function( gulp, dirname, args ) {
         if(deployed_version) {
    
         	showSuccess('Successfully deployed '+args.zip_name);
+        	
 		}else{
+			
 			showError('Failed deploying '+args.zip_name);
 		}
 		
