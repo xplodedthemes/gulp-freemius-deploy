@@ -457,7 +457,7 @@ module.exports = function( gulp, dirname, args ) {
 
                         showStep('Remove freemius related files from the Envato Version');
 
-                        runExec('cd '+extracted_path + '*/includes/ && rm -rf freemius/');
+                        runExec('cd '+extracted_path + '*/includes/ && rm -rf freemius/ freemius-migration/');
 
                         zipEnvatoVersion(cb);
                     });
