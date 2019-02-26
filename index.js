@@ -200,7 +200,7 @@ module.exports = function( gulp, dirname, args ) {
         .pipe(gulp.dest('src'))
         .on('end', function() {
             
-            runExec('cd '+gulp.dest('src')+' && zip -d deploy.zip "*.DS_Store" "*__MACOSX*"');
+            runExec('cd src && zip -d deploy.zip "*.DS_Store" "*__MACOSX*"');
             cb();
         });
     });
@@ -440,7 +440,7 @@ module.exports = function( gulp, dirname, args ) {
             var cleanEnvatoFolder = function(cb) {
 
                 runExec('cd "' + extracted_path + '" && find . -not -name "*.zip" -delete');
-                runExec('cd "' +extracted_path +'" && zip -d *.zip "*.DS_Store" "*__MACOSX*"');
+                runExec('cd "' +extracted_path + '" && zip -d *.zip "*.DS_Store" "*__MACOSX*"');
                 cb();
             };
 
