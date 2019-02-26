@@ -217,7 +217,7 @@ module.exports = function( gulp, dirname, args ) {
 
             var tags = response.body.tags;
 
-            if(tags.length > 0) {
+            if(tags && tags.length > 0) {
                 previous_version = tags.shift().version;
             }
 
