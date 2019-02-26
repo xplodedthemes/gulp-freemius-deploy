@@ -223,12 +223,12 @@ module.exports = function( gulp, dirname, args ) {
 
             cb();
         })
-            .catch(function (error) {
-                showError('Error checking Freemius latest version.');
-                showError(error);
-                cb();
-                return;
-            });
+        .catch(function (error) {
+            showError('Error checking Freemius latest version.');
+            showError(error);
+            cb();
+            return;
+        });
     });
 
     gulp.task( 'freemius-deploy', function (cb) {
@@ -318,11 +318,11 @@ module.exports = function( gulp, dirname, args ) {
 
                     showSuccess('Successfully released v' + body.version + ' on Freemius', true);
                 })
-                    .catch(function (error) {
-                        showError('Error releasing version on Freemius.');
-                        cb();
-                        return;
-                    });
+                .catch(function (error) {
+                    showError('Error releasing version on Freemius.');
+                    cb();
+                    return;
+                });
 
             }
 
@@ -375,12 +375,12 @@ module.exports = function( gulp, dirname, args ) {
                 });
 
         })
-            .catch(function (error) {
-                showError('Error deploying to Freemius.');
-                showError(error);
-                cb();
-                return;
-            });
+        .catch(function (error) {
+            showError('Error deploying to Freemius.');
+            showError(error);
+            cb();
+            return;
+        });
 
     });
 
