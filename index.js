@@ -187,15 +187,22 @@ module.exports = function( gulp, dirname, args ) {
     });
 
     gulp.task('prepare', function (cb) {
+	    
+	    showStep('Zip & Clean Source');
+	    
         gulp.src([
             '../**',
             '!../node_modules/**',
             '!../gulpfile*',
             '!**'
         ])
-            .pipe(zip('deploy.zip'))
-            .pipe(gulp.dest('src'))
-            .on('end', cb);
+        .pipe(zip('deploy.zip'))
+        .pipe(gulp.dest('src'))
+        .on('end', function() {
+            
+            runExec('cd '+gulp.dest('src')+' && zip -d deploy.zip "*.DS_Store" "*__MACOSX*"');
+            cb();
+        });
     });
 
     gulp.task('freemius-check-version', function(cb) {
@@ -433,6 +440,7 @@ module.exports = function( gulp, dirname, args ) {
             var cleanEnvatoFolder = function(cb) {
 
                 runExec('cd "' + extracted_path + '" && find . -not -name "*.zip" -delete');
+                runExec('cd "' +extracted_path +'" && zip -d *.zip "*.DS_Store" "*__MACOSX*"');
                 cb();
             };
 
@@ -442,6 +450,7 @@ module.exports = function( gulp, dirname, args ) {
                     .pipe(zip(args.zip_name))
                     .pipe(gulp.dest(extracted_path))
                     .on('end', function() {
+	                    
                         cleanEnvatoFolder(cb)
                     });
 
