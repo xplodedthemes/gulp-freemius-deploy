@@ -31,6 +31,11 @@
           "path":     "./"
         }
     ]
+  },
+  "rsync": {
+    "host":     "ip-host",
+    "username": "username",
+    "path":     "path/to/plugins"
   }
 }
 
@@ -57,7 +62,8 @@ module.exports = function( gulp, dirname, args ) {
         exec = require("sync-exec"),
         ftp = require( 'vinyl-ftp' ),
         sftpClient = require('ssh2-sftp-client'),
-		sftp = new sftpClient();
+        sftp = new sftpClient(),
+        rsync = require('gulp-rsync');
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
     const AUTH = 'FSA ' + args.developer_id + ':' + process.env.FS_ACCESS_TOKEN;
@@ -157,7 +163,7 @@ module.exports = function( gulp, dirname, args ) {
                 .pipe(clean())
                 .on('end', cb);
         }else{
-	        cb();
+            cb();
         }
     });
 
@@ -210,12 +216,12 @@ module.exports = function( gulp, dirname, args ) {
 
             cb();
         })
-        .catch(function (error) {
-            showError('Error checking Freemius latest version.');
-            showError(error);
-            cb();
-            return;
-        });
+            .catch(function (error) {
+                showError('Error checking Freemius latest version.');
+                showError(error);
+                cb();
+                return;
+            });
     });
 
     gulp.task( 'freemius-deploy', function (cb) {
@@ -305,11 +311,11 @@ module.exports = function( gulp, dirname, args ) {
 
                     showSuccess('Successfully released v' + body.version + ' on Freemius', true);
                 })
-                .catch(function (error) {
-                    showError('Error releasing version on Freemius.');
-                    cb();
-                    return;
-                });
+                    .catch(function (error) {
+                        showError('Error releasing version on Freemius.');
+                        cb();
+                        return;
+                    });
 
             }
 
@@ -362,12 +368,12 @@ module.exports = function( gulp, dirname, args ) {
                 });
 
         })
-        .catch(function (error) {
-            showError('Error deploying to Freemius.');
-            showError(error);
-            cb();
-            return;
-        });
+            .catch(function (error) {
+                showError('Error deploying to Freemius.');
+                showError(error);
+                cb();
+                return;
+            });
 
     });
 
@@ -443,12 +449,17 @@ module.exports = function( gulp, dirname, args ) {
 
             if(typeof(args.envato.modify) !== 'undefined') {
 
-                gulp.src(extracted_path + '*/*.php')
+                gulp.src([extracted_path + '*/*.php', extracted_path + '*/**/*.php'])
                     .pipe(replace(args.envato.modify.find, args.envato.modify.replace))
-                    .pipe(replace(/\/\* ENVATO_EXCLUDE_BEGIN \*\/([\s\S]+?)\/\* ENVATO_EXCLUDE_END \*\//g, ''))
+                    .pipe(replace(/\/\*.ENVATO_EXCLUDE_BEGIN.\*\/([\s\S]+?)\/\*.ENVATO_EXCLUDE_END.\*\//g, ''))
                     .pipe(gulp.dest(extracted_path))
                     .on('end', function() {
-                        zipEnvatoVersion(cb)
+
+                        showStep('Remove freemius related files from the Envato Version');
+
+                        runExec('cd '+extracted_path + '*/includes/ && rm -rf freemius/');
+
+                        zipEnvatoVersion(cb);
                     });
 
             }else{
@@ -474,71 +485,99 @@ module.exports = function( gulp, dirname, args ) {
             let zip_path = DIST_PATH + '/';
             let extracted_path = zip_path + 'envato/';
 
-			let total = args.envato.ftps.length;
-			let i = 0;
-			
+            let total = args.envato.ftps.length;
+            let i = 0;
+
             args.envato.ftps.forEach(function (params) {
 
                 showStep('Deploying to ' + params.host);
 
-				if(!params.secure) {
-					
-	                var conn = ftp.create({
-	                    host: params.host,
-	                    user: params.username,
-	                    pass: params.password,
-	                    port: params.port
-	                });
-	
-	                // using base = '.' will transfer everything to /public_html correctly
-	                // turn off buffering in gulp.src for best performance
-	
-	                return gulp.src(extracted_path + args.zip_name, {base: './dist/envato', buffer: false})
-	                    .pipe(conn.newer(params.path)) // only upload newer files
-	                    .pipe(conn.dest(params.path))
-	                    .on('end', function() {
-	                        showSuccess('Successfully deployed to ' + params.host);
-	                        i++;
-	                        if(i === total) {
-	                        	cb();
-	                        }
-	                    });
-	                    
-	            }else{
-		            
-		            var private_key_path = path.join(os.homedir(), '/.ssh/id_rsa');
-		       
-					sftp.connect({
-					    host: params.host,
-					    port: params.port,
-					    username: params.username,
-					    privateKey: fs.readFileSync(private_key_path)
-					}).then(() => {
-				
-					    return sftp.fastPut(extracted_path + args.zip_name, params.path + '/' + args.zip_name);
-					    
-					}).then((data) => {
-					    showSuccess('Successfully deployed to ' + params.host);
+                if(!params.secure) {
+
+                    var conn = ftp.create({
+                        host: params.host,
+                        user: params.username,
+                        pass: params.password,
+                        port: params.port
+                    });
+
+                    // using base = '.' will transfer everything to /public_html correctly
+                    // turn off buffering in gulp.src for best performance
+
+                    return gulp.src(extracted_path + args.zip_name, {base: './dist/envato', buffer: false})
+                        .pipe(conn.newer(params.path)) // only upload newer files
+                        .pipe(conn.dest(params.path))
+                        .on('end', function() {
+                            showSuccess('Successfully deployed to ' + params.host);
+                            i++;
+                            if(i === total) {
+                                cb();
+                            }
+                        });
+
+                }else{
+
+                    var private_key_path = path.join(os.homedir(), '/.ssh/id_rsa');
+
+                    sftp.connect({
+                        host: params.host,
+                        port: params.port,
+                        username: params.username,
+                        privateKey: fs.readFileSync(private_key_path)
+                    }).then(() => {
+
+                        return sftp.fastPut(extracted_path + args.zip_name, params.path + '/' + args.zip_name);
+
+                    }).then((data) => {
+                        showSuccess('Successfully deployed to ' + params.host);
                         i++;
                         if(i === total) {
-                        	cb();
+                            cb();
                         }
-					   
-					}).catch((err) => {
-					    console.log(err);
-					    showError('Failed deploying to ' + params.host);
-					    i++;
+
+                    }).catch((err) => {
+                        console.log(err);
+                        showError('Failed deploying to ' + params.host);
+                        i++;
                         if(i === total) {
-                        	cb();
+                            cb();
                         }
-					});
-			
-            	}
+                    });
+
+                }
             });
         }
 
     });
 
+    gulp.task('demo-deploy', function (cb) {
+
+        if(!deployed_version || !args.auto_release || !args.rsync){
+            cb();
+            return;
+        }
+
+        showStep('Deploying premium version to demo site');
+
+        let zip_path = DIST_PATH + '/';
+        let extracted_path = zip_path + 'premium/';
+        let plugin_folder_name = path.basename(extracted_path+args.zip_name, '.zip');
+        let extracted_plugin_path = extracted_path + plugin_folder_name;
+
+        extract(zip_path + args.zip_name, {dir: extracted_path}, function (err) {
+            // extraction is complete. make sure to handle the err
+            if(err) throw err;
+
+            console.log(extracted_plugin_path);
+
+            runExec('cd '+extracted_plugin_path + '*/ && rsync -avz --delete --recursive ./ '+args.rsync.username+'@'+args.rsync.host+':'+args.rsync.path + '/' + plugin_folder_name);
+
+            showSuccess('Successfully deployed to ' + args.rsync.username+'@'+args.rsync.host);
+            cb();
+
+        });
+
+    });
 
     gulp.task('git-deploy', function (cb) {
 
@@ -560,6 +599,8 @@ module.exports = function( gulp, dirname, args ) {
         }
 
         runExec('cd .. && git push');
+
+        showSuccess('Successfully deployed to git');
 
         cb();
     });
@@ -586,6 +627,7 @@ module.exports = function( gulp, dirname, args ) {
         tasks.push('envato-deploy');
     }
 
+    tasks.push('demo-deploy');
     tasks.push('git-deploy');
 
     return gulp.task('deploy', gulp.series(tasks));

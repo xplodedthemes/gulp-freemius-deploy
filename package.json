@@ -32,5 +32,7 @@
     "sync-exec": "^0.6.2",
     "vinyl-ftp": "^0.6.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "gulp-rsync": "0.0.8"
+  }
 }
