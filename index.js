@@ -642,6 +642,7 @@ module.exports = function( gulp, dirname, args ) {
 
     tasks.push('demo-deploy');
     tasks.push('git-deploy');
+    tasks.push('completed');
 
     return gulp.task('deploy', gulp.series(tasks));
 
