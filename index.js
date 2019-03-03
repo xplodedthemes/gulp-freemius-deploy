@@ -392,7 +392,6 @@ module.exports = function( gulp, dirname, args ) {
                             if(update_mode) {
                                 showStep('Version update completed!');
                                 process.stdin.pause();
-                                api.kill('SIGKILL');
                                 cb();
                                 process.exit(0);
                             }
