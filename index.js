@@ -298,7 +298,7 @@ module.exports = function( gulp, dirname, args ) {
 
             // Set update mode
             var version_exists = find_object_by_key(previous_versions, 'version', deployed_version)
-console.log(version_exists);
+
             update_mode = version_exists ? true : false;
 
             if(update_mode) {
@@ -344,6 +344,13 @@ console.log(version_exists);
                     return;
                 });
 
+            }
+
+            if(update_mode) {
+                process.stdin.pause();
+                api.kill('SIGKILL');
+                showStep('Version update completed!');
+                cb();
             }
 
 
