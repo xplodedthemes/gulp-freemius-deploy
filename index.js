@@ -346,13 +346,6 @@ module.exports = function( gulp, dirname, args ) {
 
             }
 
-            if(update_mode) {
-                process.stdin.pause();
-                api.kill('SIGKILL');
-                showStep('Version update completed!');
-                cb();
-            }
-
 
             // Download Premium Version
             showStep('Downloading premium version from freemius');
@@ -394,6 +387,15 @@ module.exports = function( gulp, dirname, args ) {
                         .on('close', function () {
                             message = "The free version was downloaded to " + DIST_PATH + '/' + args.zip_name_free;
                             showSuccess(message, true);
+
+
+                            if(update_mode) {
+                                showStep('Version update completed!');
+                                process.stdin.pause();
+                                api.kill('SIGKILL');
+                                cb();
+                                process.exit(0);
+                            }
 
                             cb();
                             return;
