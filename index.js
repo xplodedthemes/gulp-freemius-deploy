@@ -286,6 +286,7 @@ module.exports = function( gulp, dirname, args ) {
             deployed_version = body.version;
 
             // Set update mode
+            console.log(deployed_version, previous_version);
             update_mode = (deployed_version === previous_version);
 
             if(update_mode) {
@@ -644,7 +645,7 @@ module.exports = function( gulp, dirname, args ) {
         'freemius-check-version',
         'freemius-deploy'
     ];
-
+console.log(update_mode);
     if(!update_mode) {
 
         if (typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
