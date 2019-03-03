@@ -71,6 +71,7 @@ module.exports = function( gulp, dirname, args ) {
     const SRC_PATH = path.resolve(dirname, 'src');
     const DIST_PATH = path.resolve(dirname, 'dist');
 
+    var previous_versions;
     var previous_version;
     var deployed_version;
     var update_mode = false;
@@ -128,6 +129,15 @@ module.exports = function( gulp, dirname, args ) {
         }
 
         return FS_API_ENPOINT + '/v1/developers/' + args.developer_id + '/plugins/' + args.plugin_id + '/' + path + params;
+    }
+
+    var find_object_by_key = function (array, key, value) {
+        for (var i = 0; i < array.length; i++) {
+            if (array[i][key] === value) {
+                return array[i];
+            }
+        }
+        return null;
     }
 
 
@@ -214,11 +224,12 @@ module.exports = function( gulp, dirname, args ) {
             }
         };
 
-        needle('get', res_url('tags.json', 'count=1'), options).then(function (response) {
+        needle('get', res_url('tags.json', 'count=50'), options).then(function (response) {
 
             var tags = response.body.tags;
 
             if(tags && tags.length > 0) {
+                previous_versions = tags.slice();
                 previous_version = tags.shift().version;
             }
 
@@ -286,8 +297,9 @@ module.exports = function( gulp, dirname, args ) {
             deployed_version = body.version;
 
             // Set update mode
-            console.log(deployed_version, previous_version);
-            update_mode = (deployed_version === previous_version);
+            var version_exists = find_object_by_key(previous_versions, 'version', deployed_version)
+console.log(version_exists);
+            update_mode = version_exists ? true : false;
 
             if(update_mode) {
                 showStep('Running update mode...');
@@ -645,7 +657,7 @@ module.exports = function( gulp, dirname, args ) {
         'freemius-check-version',
         'freemius-deploy'
     ];
-console.log(update_mode);
+
     if(!update_mode) {
 
         if (typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
