@@ -73,6 +73,7 @@ module.exports = function( gulp, dirname, args ) {
 
     var previous_version;
     var deployed_version;
+    var update_mode = false;
 
     /**
      * Base 64 URL encode.
