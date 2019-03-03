@@ -301,6 +301,11 @@ module.exports = function( gulp, dirname, args ) {
 
             update_mode = version_exists ? true : false;
 
+            var force = typeof(process.argv[3]) !== 'undefined' && process.argv[3] === '--force';
+            if(force) {
+                update_mode = false;
+            }
+
             if(update_mode) {
                 showStep('Running update mode...');
             }
