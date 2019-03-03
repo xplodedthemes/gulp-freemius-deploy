@@ -73,6 +73,7 @@ module.exports = function( gulp, dirname, args ) {
 
     var previous_version;
     var deployed_version;
+    var update_mode = typeof(process.argv[3]) !== 'undefined' && process.argv[3] === '--update';
 
     /**
      * Base 64 URL encode.
@@ -617,7 +618,7 @@ module.exports = function( gulp, dirname, args ) {
 	gulp.task('completed', function (cb) {
 
         if(deployed_version) {
-   
+
         	showSuccess('Successfully deployed '+args.zip_name);
         	
 		}else{
@@ -628,7 +629,7 @@ module.exports = function( gulp, dirname, args ) {
         cb();
     });
 
-    let tasks = [
+    let deploy_tasks = [
         'clear',
         'validate',
         'clean',
@@ -638,21 +639,27 @@ module.exports = function( gulp, dirname, args ) {
         'freemius-deploy'
     ];
 
+    let update_tasks = deploy_tasks;
+
     if (typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
 
-        tasks.push('wordpress-deploy');
+        deploy_tasks.push('wordpress-deploy');
     }
 
     if (typeof(args.envato) !== 'undefined' && args.envato !== false) {
 
-        tasks.push('envato-prepare');
-        tasks.push('envato-deploy');
+        deploy_tasks.push('envato-prepare');
+        deploy_tasks.push('envato-deploy');
     }
 
-    tasks.push('demo-deploy');
-    tasks.push('git-deploy');
-    tasks.push('completed');
+    deploy_tasks.push('demo-deploy');
+    deploy_tasks.push('git-deploy');
+    deploy_tasks.push('completed');
 
-    return gulp.task('deploy', gulp.series(tasks));
+    if(!update_mode) {
+        gulp.task('deploy', gulp.series(deploy_tasks));
+    }else {
+        gulp.task('update', gulp.series(update_tasks));
+    }
 
 };
