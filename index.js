@@ -71,7 +71,7 @@ module.exports = function( gulp, dirname, args ) {
     const SRC_PATH = path.resolve(dirname, 'src');
     const DIST_PATH = path.resolve(dirname, 'dist');
 
-    var previous_versions;
+    var previous_versions = [];
     var previous_version;
     var deployed_version;
     var update_mode = false;
@@ -588,6 +588,9 @@ module.exports = function( gulp, dirname, args ) {
 
                 }
             });
+
+        }else{
+            cb();
         }
 
     });
