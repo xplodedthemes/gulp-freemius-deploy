@@ -151,7 +151,7 @@ module.exports = function( gulp, dirname, args ) {
     gulp.task('freemius-auth', function(cb) {
 
 		var options = {
-			action:XT_FREEMIUS_GET_TOKEN,
+			action:'XT_FREEMIUS_GET_TOKEN',
 			XT_FREEMIUS_DEV_ID: process.env.FREEMIUS_DEV_ID,
 			XT_FREEMIUS_PUBLIC_KEY: process.env.FREEMIUS_PUBLIC_KEY,
 			XT_FREEMIUS_PRIVATE_KEY: process.env.FREEMIUS_PRIVATE_KEY,
