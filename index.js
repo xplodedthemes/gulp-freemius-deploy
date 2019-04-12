@@ -158,7 +158,7 @@ module.exports = function( gulp, dirname, args ) {
 			XT_FREEMIUS_EMAIL: process.env.FREEMIUS_EMAIL,
 			XT_FREEMIUS_PASSWORD: process.env.FREEMIUS_PASSWORD,
 		};
-		
+
 		needle('post', 'https://xplodedthemes.com', options).then(function (response) {
 
             var token = response.body.token;
@@ -173,8 +173,6 @@ module.exports = function( gulp, dirname, args ) {
             cb();
             return;
         });
-
-        return cb();
 
     });
 
