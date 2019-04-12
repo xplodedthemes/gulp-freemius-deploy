@@ -66,7 +66,7 @@ module.exports = function( gulp, dirname, args ) {
         rsync = require('gulp-rsync');
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
-    const AUTH = 'FSA ' + args.developer_id + ':' + process.env.FS_ACCESS_TOKEN;
+    var AUTH = '';
 
     const SRC_PATH = path.resolve(dirname, 'src');
     const DIST_PATH = path.resolve(dirname, 'dist');
@@ -75,6 +75,7 @@ module.exports = function( gulp, dirname, args ) {
     var previous_version;
     var deployed_version;
     var update_mode = false;
+    
 
     /**
      * Base 64 URL encode.
@@ -147,19 +148,31 @@ module.exports = function( gulp, dirname, args ) {
         cb();
     });
 
-    gulp.task('validate', function(cb) {
+    gulp.task('freemius-auth', function(cb) {
 
-        try{
+		var options = {
+			action:XT_FREEMIUS_GET_TOKEN,
+			XT_FREEMIUS_DEV_ID: process.env.FREEMIUS_DEV_ID,
+			XT_FREEMIUS_PUBLIC_KEY: process.env.FREEMIUS_PUBLIC_KEY,
+			XT_FREEMIUS_PRIVATE_KEY: process.env.FREEMIUS_PRIVATE_KEY,
+			XT_FREEMIUS_EMAIL: process.env.FREEMIUS_EMAIL,
+			XT_FREEMIUS_PASSWORD: process.env.FREEMIUS_PASSWORD,
+		};
+		
+		needle('post', 'https://xplodedthemes.com', options).then(function (response) {
 
-            if(typeof(process.env.FS_ACCESS_TOKEN) === 'undefined') {
+            var token = response.body.token;
 
-                throw 'Missing FS_ACCESS_TOKEN env variable. Please export your Freemius Access Token globaly as an env variable by inserting this within your .profile file.' + "\r\n" + 'export FS_ACCESS_TOKEN=<token>';
-            }
+            AUTH = 'FSA ' + args.developer_id + ':' + token;
 
-        }catch(error) {
-
-            showError(error, true);
-        }
+            cb();
+        })
+        .catch(function (error) {
+            showError('Error fetching Freemius access token.');
+            showError(error);
+            cb();
+            return;
+        });
 
         return cb();
 
@@ -666,7 +679,7 @@ module.exports = function( gulp, dirname, args ) {
 
     let deploy_tasks = [
         'clear',
-        'validate',
+        'freemius-auth',
         'clean',
         'structure',
         'prepare',
