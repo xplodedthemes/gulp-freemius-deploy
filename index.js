@@ -695,7 +695,11 @@ module.exports = function( gulp, dirname, args ) {
         if (typeof(args.envato) !== 'undefined' && args.envato !== false) {
 
             deploy_tasks.push('envato-prepare');
-            deploy_tasks.push('envato-deploy');
+        }
+        
+        if (typeof(args.ftps) !== 'undefined' && args.ftps.length) {
+
+            deploy_tasks.push('ftp-deploy');
         }
 
         deploy_tasks.push('demo-deploy');
