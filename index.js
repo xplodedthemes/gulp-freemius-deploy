@@ -355,6 +355,7 @@ module.exports = function( gulp, dirname, args ) {
                     showSuccess('Successfully released v' + body.version + ' on Freemius', true);
                 })
                 .catch(function (error) {
+	                console.log(error);
                     showError('Error releasing version on Freemius.');
                     cb();
                     return;
