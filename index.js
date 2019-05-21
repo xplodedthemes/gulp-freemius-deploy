@@ -335,7 +335,7 @@ module.exports = function( gulp, dirname, args ) {
                         }
                     };
 
-                needle('put', res_url('tags/' + tag_id + '.json', 'fields=id,is_released,version'), data, options).then(function (response) {
+                needle('put', res_url('tags/' + tag_id + '.json', 'fields=id,release_mode,version'), data, options).then(function (response) {
 
                     var body = response.body;
 
@@ -344,7 +344,7 @@ module.exports = function( gulp, dirname, args ) {
                         cb();
                         return;
                     }
-console.log(body);
+
                     if (typeof body.error !== 'undefined' || body.release_mode !== 'released') {
                         message = 'Error: ' + body.error.message;
                         showError(message);
@@ -355,7 +355,6 @@ console.log(body);
                     showSuccess('Successfully released v' + body.version + ' on Freemius', true);
                 })
                 .catch(function (error) {
-	                console.log(error);
                     showError('Error releasing version on Freemius.');
                     cb();
                     return;
