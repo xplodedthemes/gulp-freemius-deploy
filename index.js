@@ -569,15 +569,18 @@ module.exports = function( gulp, dirname, args ) {
                         });
 
                 }else{
-
-                    var private_key_path = path.join(os.homedir(), '/.ssh/id_rsa');
-
-                    sftp.connect({
-                        host: params.host,
-                        port: params.port,
-                        username: params.username,
-                        privateKey: fs.readFileSync(private_key_path)
-                    }).then(() => {
+					
+					var private_key_path = path.join(os.homedir(), '/.ssh/id_rsa');
+					
+					var args = {
+						host: params.host,
+                        	pass: typeof(params.password) !== 'undefined' ? params.password : null,
+						port: params.port,
+						username: params.username,
+						privateKey: typeof(params.password) !== 'undefined' ? null : fs.readFileSync(private_key_path)
+					};
+                    
+                    sftp.connect().then(() => {
 
                         return sftp.fastPut(extracted_path + args.zip_name, params.path + '/' + args.zip_name);
 
