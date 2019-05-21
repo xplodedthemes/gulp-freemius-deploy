@@ -573,7 +573,7 @@ module.exports = function( gulp, dirname, args ) {
 					
 					var private_key_path = path.join(os.homedir(), '/.ssh/id_rsa');
 					
-					var args = {
+					var connection = {
 						host: params.host,
                         	pass: typeof(params.password) !== 'undefined' ? params.password : null,
 						port: params.port,
@@ -581,7 +581,7 @@ module.exports = function( gulp, dirname, args ) {
 						privateKey: typeof(params.password) !== 'undefined' ? null : fs.readFileSync(private_key_path)
 					};
                     
-                    sftp.connect().then(() => {
+                    sftp.connect(connection).then(() => {
 
                         return sftp.fastPut(extracted_path + args.zip_name, params.path + '/' + args.zip_name);
 
