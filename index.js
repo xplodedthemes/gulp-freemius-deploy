@@ -21,17 +21,17 @@
         "find": "##MARKET##",
         "replace": "envato"
     },
-    "ftps": [
-        {
-          "host":     "ftp-host.com",
-          "username": "username",
-          "password": "password",
-          "port":	  "21",
-          "secure":	  false,
-          "path":     "./"
-        }
-    ]
   },
+  "ftps": [
+    {
+      "host":     "ftp-host.com",
+      "username": "username",
+      "password": "password",
+      "port":	  "21",
+      "secure":	  false,
+      "path":     "./"
+    }
+  ],
   "rsync": {
     "host":     "ip-host",
     "username": "username",
@@ -545,13 +545,14 @@ module.exports = function( gulp, dirname, args ) {
 
                 showStep('Deploying to ' + params.host);
 
-                if(!params.secure) {
+                if(params.port === 21) {
 
                     var conn = ftp.create({
                         host: params.host,
                         user: params.username,
                         pass: params.password,
-                        port: params.port
+                        port: params.port,
+                        secure: params.secure
                     });
 
                     // using base = '.' will transfer everything to /public_html correctly
