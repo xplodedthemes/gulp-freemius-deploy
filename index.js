@@ -327,7 +327,7 @@ module.exports = function( gulp, dirname, args ) {
                 showStep('Auto releasing version on Freemius');
 
                 var data = {
-                        is_released: true
+                        release_mode: 'released'
                     },
                     options = {
                         headers: {
