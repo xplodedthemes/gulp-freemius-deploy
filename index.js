@@ -344,7 +344,7 @@ module.exports = function( gulp, dirname, args ) {
                         cb();
                         return;
                     }
-
+console.log(body);
                     if (typeof body.error !== 'undefined' || body.release_mode !== 'released') {
                         message = 'Error: ' + body.error.message;
                         showError(message);
