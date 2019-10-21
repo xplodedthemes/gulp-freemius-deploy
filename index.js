@@ -11,6 +11,7 @@
 {
   "developer_id": 000,
   "plugin_id": 000,
+  "plugin_slug": "plugin-slug",
   "zip_name": "premium-version-zip-name.zip",
   "zip_name_free": "free-version-zip-name.zip",
   "add_contributor": false,
@@ -665,6 +666,27 @@ module.exports = function( gulp, dirname, args ) {
         cb();
     });
 
+	gulp.task('flush-cache', function (cb) {
+	
+		if(typeof(args.plugin_slug) === 'undefined') {
+			cb();
+            	return;
+		}
+		
+		needle('get', 'https://xplodedthemes.com/products/'+args.plugin_slug+'?nocache=1')
+		.then(function (response) {
+
+	        showSuccess('Successfully flushed product page cache on XplodedThemes.com');
+	        cb();
+	    })
+        .catch(function (error) {
+            showError('Failed flushing plugin page cache on XplodedThemes.com');
+            showError(error);
+            cb();
+            return;
+        });
+	});
+	
 	gulp.task('completed', function (cb) {
 
         if(deployed_version) {
@@ -710,7 +732,8 @@ module.exports = function( gulp, dirname, args ) {
         deploy_tasks.push('git-deploy');
     }
 
-    deploy_tasks.push('completed');
+	deploy_tasks.push('flush-cache');
+    	deploy_tasks.push('completed');
 
     gulp.task('deploy', gulp.series(deploy_tasks));
 
