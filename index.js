@@ -673,7 +673,7 @@ module.exports = function( gulp, dirname, args ) {
             	return;
 		}
 		
-		needle('get', 'https://xplodedthemes.com/products/'+args.plugin_slug+'?nocache=1')
+		needle('get', 'https://xplodedthemes.com/products/'+args.plugin_slug+'/?nocache=1')
 		.then(function (response) {
 
 	        showSuccess('Successfully flushed product page cache on XplodedThemes.com');
