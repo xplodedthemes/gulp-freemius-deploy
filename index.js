@@ -642,28 +642,32 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('git-deploy', function (cb) {
 
-        if(!deployed_version || !args.auto_release) {
-            cb();
-            return;
-        }
+		if(!deployed_version || !args.auto_release) {
+		    cb();
+		    return;
+		}
+		
+		showStep('Push and tag version on GIT');
+		
+		runExec('cd .. && git add .');
+		runExec('cd .. && git commit -a -m "Update"');
+		runExec('cd .. && git pull origin');
+		runExec('cd .. && git submodule update --recursive --remote --merge');
+		runExec('cd .. && git submodule foreach --recursive git checkout maste');
+		runExec('cd .. && git submodule foreach --recursive git pull origin master');
+		runExec('cd .. && git add .');
+		runExec('cd .. && git commit -a -m "Update Submodules"');
+				
+		if(previous_version !== deployed_version) {
+		    runExec('cd .. && git tag -f ' + deployed_version);
+		    runExec('cd .. && git push -f --tags');
+		}
+		
+		runExec('cd .. && git push');
 
-        showStep('Push and tag version on GIT');
-
-        runExec('cd .. && git add .');
-        runExec('cd .. && git commit -a -m "Update"');
-        runExec('cd .. && git pull origin');
-        runExec('cd .. && git submodule update --recursive --remote');
-
-        if(previous_version !== deployed_version) {
-            runExec('cd .. && git tag -f ' + deployed_version);
-            runExec('cd .. && git push -f --tags');
-        }
-
-        runExec('cd .. && git push');
-
-        showSuccess('Successfully deployed to git');
-
-        cb();
+		showSuccess('Successfully deployed to git');
+		
+		cb();
     });
 
 	gulp.task('flush-cache', function (cb) {
