@@ -653,8 +653,7 @@ module.exports = function( gulp, dirname, args ) {
 		runExec('cd .. && git commit -a -m "Update"');
 		runExec('cd .. && git pull origin');
 		runExec('cd .. && git submodule update --recursive --remote --merge');
-		runExec('cd .. && git submodule foreach --recursive git checkout maste');
-		runExec('cd .. && git submodule foreach --recursive git pull origin master');
+		runExec('cd .. && git submodule foreach --recursive git checkout -f master');
 		runExec('cd .. && git add .');
 		runExec('cd .. && git commit -a -m "Update Submodules"');
 				
