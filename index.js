@@ -474,7 +474,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('envato-prepare', function (cb) {
 
-        if(!deployed_version || test_mode) {
+        if(!deployed_version) {
             cb();
             return;
         }
@@ -731,12 +731,15 @@ module.exports = function( gulp, dirname, args ) {
 
             deploy_tasks.push('wordpress-deploy');
         }
+	}
+	
+    if (typeof(args.envato) !== 'undefined' && args.envato !== false) {
 
-        if (typeof(args.envato) !== 'undefined' && args.envato !== false) {
-
-            deploy_tasks.push('envato-prepare');
-        }
+        deploy_tasks.push('envato-prepare');
+    }
         
+    if(!update_mode) {
+	    
         if (typeof(args.ftps) !== 'undefined' && args.ftps.length) {
 
             deploy_tasks.push('ftp-deploy');
