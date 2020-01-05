@@ -15,7 +15,6 @@
   "zip_name": "premium-version-zip-name.zip",
   "zip_name_free": "free-version-zip-name.zip",
   "add_contributor": false,
-  "auto_release": true,
   "svn_path": "/path/to/svn",
   "envato": {
     "modify": {
@@ -64,7 +63,8 @@ module.exports = function( gulp, dirname, args ) {
         ftp = require( 'vinyl-ftp' ),
         sftpClient = require('ssh2-sftp-client'),
         sftp = new sftpClient(),
-        rsync = require('gulp-rsync');
+        rsync = require('gulp-rsync'),
+        argv = require('yargs').argv;
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
     var AUTH = '';
@@ -76,6 +76,7 @@ module.exports = function( gulp, dirname, args ) {
     var previous_version;
     var deployed_version;
     var update_mode = false;
+    var test_mode = false;
     
 
     /**
@@ -313,9 +314,15 @@ module.exports = function( gulp, dirname, args ) {
 
             update_mode = version_exists ? true : false;
 
-            var force = typeof(process.argv[3]) !== 'undefined' && process.argv[3] === '--force';
+            var force = (argv.force !== false);
+            var test = (argv.test !== false);
+            
             if(force) {
                 update_mode = false;
+            }
+            
+            if(test) {
+                test_mode = true;
             }
 
             if(update_mode) {
@@ -323,7 +330,7 @@ module.exports = function( gulp, dirname, args ) {
             }
 
             // Auto Release Version
-            if(args.auto_release) {
+            if(!test_mode) {
 
                 showStep('Auto releasing version on Freemius');
 
@@ -432,7 +439,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('wordpress-deploy', function (cb) {
 
-        if(!deployed_version || !args.auto_release){
+        if(!deployed_version || test_mode){
             cb();
             return;
         }
@@ -467,7 +474,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('envato-prepare', function (cb) {
 
-        if(!deployed_version || !args.auto_release) {
+        if(!deployed_version || test_mode) {
             cb();
             return;
         }
@@ -527,7 +534,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('ftp-deploy', function (cb) {
 
-        if(!deployed_version || !args.auto_release) {
+        if(!deployed_version || test_mode) {
             cb();
             return;
         }
@@ -613,7 +620,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('demo-deploy', function (cb) {
 
-        if(!deployed_version || !args.auto_release || !args.rsync){
+        if(!deployed_version || test_mode || !args.rsync){
             cb();
             return;
         }
@@ -642,7 +649,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('git-deploy', function (cb) {
 
-		if(!deployed_version || !args.auto_release) {
+		if(!deployed_version || test_mode) {
 		    cb();
 		    return;
 		}
@@ -692,10 +699,14 @@ module.exports = function( gulp, dirname, args ) {
 	
 	gulp.task('completed', function (cb) {
 
-        if(deployed_version) {
-
-        	showSuccess('Successfully deployed '+args.zip_name);
-        	
+		if(deployed_version) {
+		
+			if(test_mode) {
+				showSuccess('Successfully deployed pending test version '+args.zip_name);
+			}else{
+				showSuccess('Successfully deployed and released '+args.zip_name);
+			}
+			
 		}else{
 			
 			showError('Failed deploying '+args.zip_name);

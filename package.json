@@ -33,6 +33,7 @@
     "vinyl-ftp": "^0.6.1"
   },
   "devDependencies": {
-    "gulp-rsync": "0.0.8"
+    "gulp-rsync": "0.0.8",
+    "yargs": "^15.1.0"
   }
 }
