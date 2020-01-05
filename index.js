@@ -197,7 +197,8 @@ module.exports = function( gulp, dirname, args ) {
 
         const folders = [
             'src',
-            'dist'
+            'dist',
+            'dist/envato'
         ];
 
         folders.forEach(dir => {
