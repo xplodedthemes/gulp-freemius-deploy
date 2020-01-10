@@ -315,8 +315,8 @@ module.exports = function( gulp, dirname, args ) {
 
             update_mode = version_exists ? true : false;
 
-            var force = (argv.force !== false);
-            var test = (argv.test !== false);
+            var force = (argv.force === true);
+            var test = (argv.test === true);
             
             if(force) {
                 update_mode = false;
