@@ -462,7 +462,7 @@ module.exports = function( gulp, dirname, args ) {
             runExec('cd '+svn_path+' && svn upgrade');
             runExec('cd '+svn_path+' && svn status | grep \'^!\' | awk \'{print $2}\' | xargs svn delete');
             runExec('cd '+svn_path+' && svn add --force .');
-            runExec('cd '+svn_path+' && svn commit -m "Update"');
+            runExec('cd '+svn_path+' && svn commit -m "Update" --force-interactive');
 
             cb();
 
