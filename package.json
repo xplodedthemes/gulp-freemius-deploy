@@ -21,7 +21,6 @@
     "fs": "0.0.1-security",
     "gulp": "^4.0.2",
     "gulp-clean": "^0.4.0",
-    "gulp-exit": "0.0.2",
     "gulp-replace": "^1.0.0",
     "gulp-zip": "^4.2.0",
     "http-build-query": "^0.7.0",

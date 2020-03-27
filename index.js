@@ -64,7 +64,6 @@ module.exports = function( gulp, dirname, args ) {
         sftpClient = require('ssh2-sftp-client'),
         sftp = new sftpClient(),
         rsync = require('gulp-rsync'),
-        exit = require('gulp-exit'),
         argv = require('yargs').argv;
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
@@ -679,7 +678,7 @@ module.exports = function( gulp, dirname, args ) {
 	
 		if(typeof(args.plugin_slug) === 'undefined') {
 			cb();
-            	return;
+            return;
 		}
 		
 		needle('get', 'https://xplodedthemes.com/products/'+args.plugin_slug+'/?nocache=1')
@@ -712,6 +711,7 @@ module.exports = function( gulp, dirname, args ) {
 		}
 		
         cb();
+        return;
     });
 
     let deploy_tasks = [
@@ -751,6 +751,6 @@ module.exports = function( gulp, dirname, args ) {
 	deploy_tasks.push('flush-cache');
     deploy_tasks.push('completed');
 
-    gulp.task('deploy', gulp.series(deploy_tasks)).pipe(exit());
+    gulp.task('deploy', gulp.series(deploy_tasks));
 
 };
