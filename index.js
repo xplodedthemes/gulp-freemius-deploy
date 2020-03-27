@@ -166,7 +166,7 @@ module.exports = function( gulp, dirname, args ) {
             var token = response.body.token;
 
             AUTH = 'FSA ' + args.developer_id + ':' + token;
-
+			console.log(AUTH);
             cb();
         })
         .catch(function (error) {
