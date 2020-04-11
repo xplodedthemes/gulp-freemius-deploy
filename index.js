@@ -64,10 +64,6 @@ module.exports = function( gulp, dirname, args ) {
         sftp = new sftpClient(),
         argv = require('yargs').argv;
 
-    const { IncomingWebhook } = require('@slack/webhook');
-
-    const slack = new IncomingWebhook('https://hooks.slack.com/services/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');
-
     const FS_API_ENPOINT = 'https://api.freemius.com';
     var AUTH = '';
 
@@ -689,19 +685,6 @@ module.exports = function( gulp, dirname, args ) {
 				showSuccess('Successfully deployed pending test version '+args.zip_name);
 			}else{
 				showSuccess('Successfully deployed and released '+args.zip_name);
-
-                // Send the notification
-
-                try {
-
-                    await slack.send({
-                        text: 'New version (v.' + deployed_version + ') released for "' + args.plugin_name + '" - Changelog: https://xplodedthemes.com/products/' + args.plugin_slug + '/#changelog-tab',
-                    });
-
-                }catch(error) {
-                    showError(error.message)
-                }
-
             }
 			
 		}else{
