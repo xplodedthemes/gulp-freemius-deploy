@@ -21,7 +21,6 @@
     "gulp": "^4.0.2",
     "gulp-clean": "^0.4.0",
     "gulp-replace": "^1.0.0",
-    "gulp-sftp": "^0.1.5",
     "gulp-zip": "^4.2.0",
     "http-build-query": "^0.7.0",
     "md5": "^2.2.1",
