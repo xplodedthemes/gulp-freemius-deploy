@@ -64,13 +64,9 @@ module.exports = function( gulp, dirname, args ) {
         sftp = new sftpClient(),
         argv = require('yargs').argv;
 
+    const { IncomingWebhook } = require('@slack/webhook');
 
-    const slack = require('gulp-slack')({
-        url: 'https://hooks.slack.com/services/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',
-        channel: '#updates', // Optional
-        user: 'bar', // Optional
-        icon_url: 'https://xplodedthemes.com/wp-content/themes/xplodedthemes/images/light-identity.png'
-    });
+    const slack = new IncomingWebhook(url);
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
     var AUTH = '';
@@ -694,8 +690,13 @@ module.exports = function( gulp, dirname, args ) {
 			}else{
 				showSuccess('Successfully deployed and released '+args.zip_name);
 
-                gulp.pipe(slack('New version (v.'+deployed_version+') released for "'+args.plugin_name+'" - Changelog: https://xplodedthemes.com/products/'+args.plugin_slug+'/#changelog-tab'));
-			}
+                // Send the notification
+                (async () => {
+                    await slack.send({
+                        text: 'New version (v.'+deployed_version+') released for "'+args.plugin_name+'" - Changelog: https://xplodedthemes.com/products/'+args.plugin_slug+'/#changelog-tab',
+                    });
+                })();
+            }
 			
 		}else{
 			
