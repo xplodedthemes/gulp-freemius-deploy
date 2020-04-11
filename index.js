@@ -66,7 +66,7 @@ module.exports = function( gulp, dirname, args ) {
 
     const { IncomingWebhook } = require('@slack/webhook');
 
-    const slack = new IncomingWebhook('https://hooks.slack.com/services/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');
+    const slack = new IncomingWebhook('https://hooks.slack.com/services/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');
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
     var AUTH = '';
