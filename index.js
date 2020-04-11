@@ -66,7 +66,7 @@ module.exports = function( gulp, dirname, args ) {
 
 
     const slack = require('gulp-slack')({
-        url: 'https://hooks.slack.com/services/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',
+        url: 'https://hooks.slack.com/services/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',
         channel: '#updates', // Optional
         user: 'bar', // Optional
         icon_url: 'https://xplodedthemes.com/wp-content/themes/xplodedthemes/images/light-identity.png'
