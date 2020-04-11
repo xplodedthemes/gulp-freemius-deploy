@@ -681,7 +681,7 @@ module.exports = function( gulp, dirname, args ) {
         });
 	});
 	
-	gulp.task('completed', function (cb) {
+	gulp.task('completed', async function (cb) {
 
 		if(deployed_version) {
 		
@@ -691,11 +691,17 @@ module.exports = function( gulp, dirname, args ) {
 				showSuccess('Successfully deployed and released '+args.zip_name);
 
                 // Send the notification
-                (async () => {
+
+                try {
+
                     await slack.send({
-                        text: 'New version (v.'+deployed_version+') released for "'+args.plugin_name+'" - Changelog: https://xplodedthemes.com/products/'+args.plugin_slug+'/#changelog-tab',
+                        text: 'New version (v.' + deployed_version + ') released for "' + args.plugin_name + '" - Changelog: https://xplodedthemes.com/products/' + args.plugin_slug + '/#changelog-tab',
                     });
-                })();
+
+                }catch(error) {
+                    showError(error.message)
+                }
+
             }
 			
 		}else{
