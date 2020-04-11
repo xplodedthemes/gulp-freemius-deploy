@@ -58,13 +58,19 @@ module.exports = function( gulp, dirname, args ) {
         needle = require( 'needle' ),
         request = require( 'request' ),
         httpBuildQuery = require('http-build-query'),
-        cryptojs = require( 'crypto-js' ),
         exec = require("sync-exec"),
         ftp = require( 'vinyl-ftp' ),
         sftpClient = require('ssh2-sftp-client'),
         sftp = new sftpClient(),
-        rsync = require('gulp-rsync'),
         argv = require('yargs').argv;
+
+
+    const slack = require('gulp-slack')({
+        url: 'https://hooks.slack.com/services/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',
+        channel: '#updates', // Optional
+        user: 'bar', // Optional
+        icon_url: 'https://xplodedthemes.com/wp-content/themes/xplodedthemes/images/light-identity.png'
+    });
 
     const FS_API_ENPOINT = 'https://api.freemius.com';
     var AUTH = '';
@@ -77,22 +83,6 @@ module.exports = function( gulp, dirname, args ) {
     var deployed_version;
     var update_mode = false;
     var test_mode = false;
-    
-
-    /**
-     * Base 64 URL encode.
-     *
-     * @param str
-     * @return string
-     */
-    var base64_url_encode = function( str ) {
-        str = new Buffer( str ).toString( 'base64' );
-        // str = strtr(base64_encode($input), '+/', '-_');
-        str = str.replace( /=/g, '' );
-
-        return str;
-    };
-
 
     var runExec = function(command) {
 
@@ -703,13 +693,15 @@ module.exports = function( gulp, dirname, args ) {
 				showSuccess('Successfully deployed pending test version '+args.zip_name);
 			}else{
 				showSuccess('Successfully deployed and released '+args.zip_name);
+
+                slack('New version (v.'+deployed_version+') released for "'+args.plugin_name+'" - Changelog: https://xplodedthemes.com/products/'+args.plugin_slug+'/#changelog-tab');
 			}
 			
 		}else{
 			
 			showError('Failed deploying '+args.zip_name);
 		}
-		
+
         cb();
         return;
     });
