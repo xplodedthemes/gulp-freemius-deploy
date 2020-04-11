@@ -694,7 +694,7 @@ module.exports = function( gulp, dirname, args ) {
 			}else{
 				showSuccess('Successfully deployed and released '+args.zip_name);
 
-                slack('New version (v.'+deployed_version+') released for "'+args.plugin_name+'" - Changelog: https://xplodedthemes.com/products/'+args.plugin_slug+'/#changelog-tab');
+                gulp.pipe(slack('New version (v.'+deployed_version+') released for "'+args.plugin_name+'" - Changelog: https://xplodedthemes.com/products/'+args.plugin_slug+'/#changelog-tab'));
 			}
 			
 		}else{
