@@ -75,6 +75,7 @@ module.exports = function( gulp, dirname, args ) {
     var deployed_version;
     var update_mode = false;
     var test_mode = false;
+    var skip_svn = false;
 
     var runExec = function(command) {
 
@@ -292,19 +293,11 @@ module.exports = function( gulp, dirname, args ) {
             // Set update mode
             var version_exists = find_object_by_key(previous_versions, 'version', deployed_version)
 
-            update_mode = version_exists ? true : false;
-
-            var force = (argv.force === true);
-            var test = (argv.test === true);
-            
-            if(force) {
-                update_mode = false;
-            }
-            
-            if(test) {
-                test_mode = true;
-            }
-
+            update_mode = version_exists && (argv.force !== true) ? true : false;
+            test_mode = (argv.test === true);
+            beta_mode = (argv.beta === true);
+            skip_svn = (argv.skipsvn === true);
+      
             if(update_mode) {
                 showStep('Running update mode...');
             }
@@ -312,16 +305,19 @@ module.exports = function( gulp, dirname, args ) {
             // Auto Release Version
             if(!test_mode) {
 
-                showStep('Auto releasing version on Freemius');
-
+				var release_mode = beta_mode ? 'beta' : 'released';
+				var release_message = beta_mode ? 'BETA' : 'OFFICIAL';
+				
+                showStep('Auto releasing '+release_message+' version on Freemius');
+		
                 var data = {
-                        release_mode: 'released'
-                    },
-                    options = {
-                        headers: {
-                            "Authorization": AUTH
-                        }
-                    };
+                    release_mode: release_mode
+                },
+                options = {
+                    headers: {
+                        "Authorization": AUTH
+                    }
+                };
 
                 needle('put', res_url('tags/' + tag_id + '.json', 'fields=id,release_mode,version'), data, options).then(function (response) {
 
@@ -340,10 +336,10 @@ module.exports = function( gulp, dirname, args ) {
                         return;
                     }
 
-                    showSuccess('Successfully released v' + body.version + ' on Freemius', true);
+                    showSuccess('Successfully released '+release_message+' v' + body.version + ' on Freemius', true);
                 })
                 .catch(function (error) {
-                    showError('Error releasing version on Freemius.');
+                    showError('Error releasing '+release_message+' version on Freemius.');
                     cb();
                     return;
                 });
@@ -419,7 +415,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('wordpress-deploy', function (cb) {
 
-        if(!deployed_version || test_mode){
+        if(!deployed_version){
             cb();
             return;
         }
@@ -515,7 +511,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('ftp-deploy', function (cb) {
 
-        if(!deployed_version || test_mode) {
+        if(!deployed_version) {
             cb();
             return;
         }
@@ -601,7 +597,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('demo-deploy', function (cb) {
 
-        if(!deployed_version || test_mode || !args.rsync){
+        if(!deployed_version || !args.rsync){
             cb();
             return;
         }
@@ -630,7 +626,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('git-deploy', function (cb) {
 
-		if(!deployed_version || test_mode) {
+		if(!deployed_version) {
 		    cb();
 		    return;
 		}
@@ -682,9 +678,13 @@ module.exports = function( gulp, dirname, args ) {
 
 		if(deployed_version) {
 		
-			if(test_mode) {
-				showSuccess('Successfully deployed pending test version '+args.zip_name);
+			if(test_mode || beta_mode) {
+				var deploy_type = beta_mode ? 'BETA' : 'PENDING';
+				
+				showSuccess('Successfully deployed '+deploy_type+' version '+args.zip_name);
+				
 			}else{
+				
 				showSuccess('Successfully deployed and released '+args.zip_name);
             }
 			
@@ -707,27 +707,33 @@ module.exports = function( gulp, dirname, args ) {
         'freemius-deploy'
     ];
 
-    if(!update_mode) {
-
-        if (typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
-
-            deploy_tasks.push('wordpress-deploy');
-        }
-	}
 	
     if (typeof(args.envato) !== 'undefined' && args.envato !== false) {
 
         deploy_tasks.push('envato-prepare');
     }
         
-    if(!update_mode) {
+    if(!update_mode && !test_mode && !beta_mode) {
+
+        if (!skip_svn && typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
+
+            deploy_tasks.push('wordpress-deploy');
+        }
 	    
         if (typeof(args.ftps) !== 'undefined' && args.ftps.length) {
 
             deploy_tasks.push('ftp-deploy');
         }
-
+        
         deploy_tasks.push('demo-deploy');
+
+    }else if(update_mode) {
+	    
+	    deploy_tasks.push('demo-deploy');
+    }
+        
+	if(!update_mode && !test_mode && !beta_mode) {
+		
         deploy_tasks.push('git-deploy');
     }
 
