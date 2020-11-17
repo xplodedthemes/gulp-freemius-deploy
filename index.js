@@ -74,8 +74,10 @@ module.exports = function( gulp, dirname, args ) {
     var previous_version;
     var deployed_version;
     var update_mode = false;
-    var test_mode = false;
-    var skip_svn = false;
+    var test_mode = (argv.test === true);
+    var beta_mode = (argv.beta === true);
+    var skip_svn = (argv.skipsvn === true);
+      
 
     var runExec = function(command) {
 
@@ -294,10 +296,7 @@ module.exports = function( gulp, dirname, args ) {
             var version_exists = find_object_by_key(previous_versions, 'version', deployed_version)
 
             update_mode = version_exists && (argv.force !== true) ? true : false;
-            test_mode = (argv.test === true);
-            beta_mode = (argv.beta === true);
-            skip_svn = (argv.skipsvn === true);
-      
+
             if(update_mode) {
                 showStep('Running update mode...');
             }
@@ -415,7 +414,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('wordpress-deploy', function (cb) {
 
-        if(!deployed_version){
+        if(!deployed_version || update_mode){
             cb();
             return;
         }
@@ -511,7 +510,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('ftp-deploy', function (cb) {
 
-        if(!deployed_version) {
+        if(!deployed_version || update_mode) {
             cb();
             return;
         }
@@ -626,7 +625,7 @@ module.exports = function( gulp, dirname, args ) {
 
     gulp.task('git-deploy', function (cb) {
 
-		if(!deployed_version) {
+		if(!deployed_version || update_mode) {
 		    cb();
 		    return;
 		}
@@ -713,7 +712,7 @@ module.exports = function( gulp, dirname, args ) {
         deploy_tasks.push('envato-prepare');
     }
         
-    if(!update_mode && !test_mode && !beta_mode) {
+    if(!test_mode && !beta_mode) {
 
         if (!skip_svn && typeof(args.svn_path) !== 'undefined' && args.svn_path !== false) {
 
@@ -725,14 +724,11 @@ module.exports = function( gulp, dirname, args ) {
             deploy_tasks.push('ftp-deploy');
         }
         
-        deploy_tasks.push('demo-deploy');
-
-    }else if(update_mode) {
-	    
-	    deploy_tasks.push('demo-deploy');
     }
-        
-	if(!update_mode && !test_mode && !beta_mode) {
+       
+    deploy_tasks.push('demo-deploy');
+ 
+	if(!test_mode && !beta_mode) {
 		
         deploy_tasks.push('git-deploy');
     }
