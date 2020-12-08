@@ -77,7 +77,7 @@ module.exports = function( gulp, dirname, args ) {
     var test_mode = (argv.test === true);
     var beta_mode = (argv.beta === true);
     var skip_svn = (argv.skipsvn === true);
-      
+    var demo_only = (argv.demo === true);
 
     var runExec = function(command) {
 
@@ -734,6 +734,11 @@ module.exports = function( gulp, dirname, args ) {
     }
 
 	deploy_tasks.push('flush-cache');
+	
+	if(demo_only) {
+		deploy_tasks = ['ftp-deploy'];
+	}
+	
     deploy_tasks.push('completed');
 
     gulp.task('deploy', gulp.series(deploy_tasks));
